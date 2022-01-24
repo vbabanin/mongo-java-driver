@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:08.91">
+<meta name="date" content="2022-01-24T16:21:50.31">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>Client Side Encryption</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/client-side-encryption.md" target="_blank" title="Edit driver/tutorials/client-side-encryption.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.1/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li>Client Side Encryption</li>
 </ul>
@@ -346,7 +351,7 @@ See the <a href="/mongo-java-driver/4.1/driver/getting-started/installation/">in
     &lt;dependency&gt;
         &lt;groupId&gt;org.mongodb&lt;/groupId&gt;
         &lt;artifactId&gt;mongodb-crypt&lt;/artifactId&gt;
-        &lt;version&gt;1.0.1&lt;/version&gt;
+        &lt;version&gt;1.2.1&lt;/version&gt;
     &lt;/dependency&gt;
 &lt;/dependencies&gt;
 
@@ -355,14 +360,14 @@ See the <a href="/mongo-java-driver/4.1/driver/getting-started/installation/">in
 <section class="gradle hidden">
 <pre><code>
   dependencies {
-      compile 'org.mongodb:mongodb-crypt:1.0.1'
+      compile 'org.mongodb:mongodb-crypt:1.2.1'
   }
 
 </code></pre>
 </section>
 <section class="sbt hidden">
 <pre><code>
-  libraryDependencies += "org.mongodb" %% "mongodb-crypt" % "1.0.1"</code></pre>
+  libraryDependencies += "org.mongodb" %% "mongodb-crypt" % "1.2.1"</code></pre>
 </section>
 
 <h3 id="mongocryptd-configuration">mongocryptd configuration</h3>
@@ -375,8 +380,8 @@ See the <a href="/mongo-java-driver/4.1/driver/getting-started/installation/">in
 <h3 id="examples">Examples</h3>
 
 <p>The following is a sample app that assumes the <strong>key</strong> and <strong>schema</strong> have already been created in MongoDB. The example uses a local key,
-however using AWS Key Management Service is also an option. The data in the <code>encryptedField</code> field is automatically encrypted on the
-insert and decrypted when using find on the client side. The following code snippet comes from the
+however using either of the AWS / Azure / GCP Key Management Service is also an option. The data in the <code>encryptedField</code> field is
+automatically encrypted on the insert and decrypted when using find on the client side. The following code snippet comes from the
 <a href="https://github.com/mongodb/mongo-java-driver/blob/master/driver-sync/src/examples/tour/ClientSideEncryptionSimpleTour.java
 "><code>ClientSideEncryptionSimpleTour.java</code></a> example code
 that can be found with the driver source on github:</p>

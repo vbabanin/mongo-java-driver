@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:08.97">
+<meta name="date" content="2022-01-24T16:21:50.4">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>GridFS</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/gridfs.md" target="_blank" title="Edit driver/tutorials/gridfs.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.1/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li>GridFS</li>
 </ul>
@@ -331,8 +336,7 @@ that can be found with the driver source on github.</p>
 
 <p>Include the following import statements:</p>
 
-<pre><code class="language-java">import com.mongodb.Block;
-import com.mongodb.client.MongoClients;
+<pre><code class="language-java">import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.*;
@@ -393,7 +397,8 @@ GridFSBucket gridFSFilesBucket = GridFSBuckets.create(myDatabase, &quot;files&qu
 <h3 id="uploadfromstream">UploadFromStream</h3>
 
 <p>The <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html#openUploadStream(java.lang.String,com.mongodb.client.gridfs.model.GridFSUploadOptions)
-"><code>GridFSBucket.uploadFromStream</code></a> method reads the contents of an <a href="http://docs.oracle.com/javase/8/docs/api/index.html?java/io/InputStream.html"><code>InputStream</code></a> and saves it to the <code>GridFSBucket</code>.</p>
+"><code>GridFSBucket.uploadFromStream</code></a> method reads the contents of an <a href="https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html
+"><code>InputStream</code></a> and saves it to the <code>GridFSBucket</code>.</p>
 
 <p>You can use the <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/client/gridfs/model/GridFSUploadOptions.html
 "><code>GridFSUploadOptions</code></a> to configure the chunk size or include additional metadata.</p>
@@ -419,7 +424,8 @@ try {
 
 <p>You can write data to a <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSUploadStream.html
 "><code>GridFSUploadStream</code></a> which extends
- <a href="http://docs.oracle.com/javase/8/docs/api/index.html?java/io/OutputStream.html"><code>OutputStream</code></a>. The
+ <a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html
+"><code>OutputStream</code></a>. The
  <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html#openUploadStream(java.lang.String,com.mongodb.client.gridfs.model.GridFSUploadOptions)
 "><code>GridFSBucket.openUploadStream</code></a>
  method returns a <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSUploadStream.html
@@ -435,7 +441,7 @@ try {
                        .metadata(new Document(&quot;type&quot;, &quot;presentation&quot;));
 
     GridFSUploadStream uploadStream = gridFSFilesBucket.openUploadStream(&quot;mongodb-tutorial-2&quot;, options);
-    byte[] data = Files.readAllBytes(new File(&quot;/tmp/MongoDB-manual-master.pdf&quot;).toPath());
+    byte[] data = Files.readAllBytes(new File(&quot;/tmp/MongoDB-manual.pdf&quot;).toPath());
 
     uploadStream.write(data);
     uploadStream.close();
@@ -453,22 +459,14 @@ try {
 
 <p>The following example prints out the filename of each file stored:</p>
 
-<pre><code class="language-java">gridFSBucket.find().forEach(
-  new Block&lt;GridFSFile&gt;() {
-    public void apply(final GridFSFile gridFSFile) {
-        System.out.println(gridFSFile.getFilename());
-    }
-});
+<pre><code class="language-java">gridFSBucket.find()
+        .forEach(gridFSFile -&gt; System.out.println(gridFSFile.getFilename()));
 </code></pre>
 
 <p>You can also provide a custom filter to limit the results returned. The following example prints out the filenames of all files with a &ldquo;image/png&rdquo; value set as the contentType in the user defined metadata document:</p>
 
-<pre><code class="language-java">gridFSBucket.find(eq(&quot;metadata.contentType&quot;, &quot;image/png&quot;)).forEach(
-  new Block&lt;GridFSFile&gt;() {
-      public void apply(final GridFSFile gridFSFile) {
-          System.out.println(gridFSFile.getFilename());
-      }
-  });
+<pre><code class="language-java">gridFSBucket.find(eq(&quot;metadata.contentType&quot;, &quot;image/png&quot;))
+        .forEach(gridFSFile -&gt; System.out.println(gridFSFile.getFilename()));
 </code></pre>
 
 <h2 id="download-from-gridfs">Download from GridFS</h2>
@@ -478,7 +476,8 @@ try {
 <h3 id="downloadtostream">DownloadToStream</h3>
 
 <p>The <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html#downloadToStream(org.bson.types.ObjectId,java.io.OutputStream)
-"><code>downloadToStream</code></a> method reads the contents from MongoDB and writes the data directly to the provided <a href="http://docs.oracle.com/javase/8/docs/api/index.html?java/io/OutputStream.html"><code>OutputStream</code></a>.</p>
+"><code>downloadToStream</code></a> method reads the contents from MongoDB and writes the data directly to the provided <a href="https://docs.oracle.com/javase/8/docs/api/java/io/OutputStream.html
+"><code>OutputStream</code></a>.</p>
 
 <p>To download a file by its file <code>_id</code>, pass the <code>_id</code> to the method. The
 following example downloads a file by its file <code>_id</code> into the provided
@@ -518,7 +517,8 @@ try {
 
 <p>The <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSBucket.html#openDownloadStream(org.bson.types.ObjectId)
 "><code>openDownloadStream</code></a> method returns a <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/gridfs/GridFSDownloadStream.html
-"><code>GridFSDownloadStream</code></a> which extends <a href="http://docs.oracle.com/javase/8/docs/api/index.html?java/io/InputStream.html"><code>InputStream</code></a>.</p>
+"><code>GridFSDownloadStream</code></a> which extends <a href="https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html
+"><code>InputStream</code></a>.</p>
 
 <p>The following example reads from the <code>GridFSBucket</code> via the returned <code>InputStream</code>:</p>
 

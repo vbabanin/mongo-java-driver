@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:02:27.79">
+<meta name="date" content="2022-01-24T16:21:49.72">
 <link rel="shortcut icon" href="/mongo-java-driver/4.0/img/favicon.png">
 
     <title>Upgrade Considerations</title><link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.0/../">
-        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,13 +312,30 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/upgrading.md" target="_blank" title="Edit upgrading.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li>Upgrade Considerations</li>
 </ul>
 </div>
+
+<h1 id="upgrading-to-the-4-3-driver">Upgrading to the 4.3 Driver</h1>
+
+<p>The 4.3 release is a minor release as per the definition of <a href="https://semver.org">semantic versioning</a>. As such, there are no breaking
+changes in this release for users upgrading from the 4.2 release.</p>
+
+<h1 id="upgrading-to-the-4-2-driver">Upgrading to the 4.2 Driver</h1>
+
+<p>The 4.2 release is a minor release as per the definition of <a href="https://semver.org">semantic versioning</a>. As such, there are no breaking
+changes in this release for users upgrading from the 4.1 release.</p>
+
+<p>Note that in this release the Reactive Streams driver has taken an implementation dependency on
+<a href="https://projectreactor.io/">Project Reactor</a>.  The minimum supported Project Reactor version is <em>Californium-SR23</em>.</p>
+
+<h1 id="upgrading-to-the-4-1-driver">Upgrading to the 4.1 Driver</h1>
+
+<p>The 4.1 release is a minor release as per the definition of <a href="https://semver.org">semantic versioning</a>. As such, there are no breaking
+changes in this release for users upgrading from the 4.0 release.  Please see the upgrading guide for the 4.0 driver (just below) if you
+plan to upgrade directly from a 3.x release of the driver.</p>
 
 <h1 id="upgrading-to-the-4-0-driver">Upgrading to the 4.0 Driver</h1>
 
@@ -339,7 +360,7 @@ creates more readable JSON documents at the cost of a loss of some BSON type inf
 integers).</li>
 <li>The default BSON representation of <code>java.util.UUID</code> values has changed from <code>JAVA_LEGACY</code> to <code>UNSPECIFIED</code>.  Applications that
 store or retrieve UUID values must explicitly specify which representation to use, via the <code>uuidRepresentation</code> property of
-<code>MongoClientSettings</code> (or <code>MongoClientOptions</code> for the legacy driver).</li>
+<code>MongoClientSettings</code>.</li>
 <li>The connection pool no longer enforces any restrictions on the size of the wait queue of threads or asynchronous tasks that
 require a connection to MongoDB.  It is up to the application to throttle requests sufficiently rather than rely on the driver to
 throw a <code>MongoWaitQueueFullException</code>.</li>
@@ -404,6 +425,39 @@ Please note that <code>onNext</code> will not be called just <code>onComplete</c
 </thead>
 
 <tbody>
+<tr>
+<td>Version 4.3</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+
+<tr>
+<td>Version 4.2</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+
+<tr>
+<td>Version 4.1</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+
 <tr>
 <td>Version 4.0</td>
 <td>✓</td>
@@ -577,6 +631,9 @@ Please note that <code>onNext</code> will not be called just <code>onComplete</c
 <div class="wrapper"><div class="toc">
     <span class="toc-header">On this page</span><nav id="TableOfContents">
 <ul>
+<li><a href="#upgrading-to-the-4-3-driver">Upgrading to the 4.3 Driver</a></li>
+<li><a href="#upgrading-to-the-4-2-driver">Upgrading to the 4.2 Driver</a></li>
+<li><a href="#upgrading-to-the-4-1-driver">Upgrading to the 4.1 Driver</a></li>
 <li><a href="#upgrading-to-the-4-0-driver">Upgrading to the 4.0 Driver</a>
 <ul>
 <li><a href="#upgrading-from-the-3-12-java-driver">Upgrading from the 3.12 Java driver</a></li>

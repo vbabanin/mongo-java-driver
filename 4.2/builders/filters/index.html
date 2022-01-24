@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-04-06T12:12:05.82">
+<meta name="date" content="2022-01-24T16:21:51.62">
 <link rel="shortcut icon" href="/mongo-java-driver/4.2/img/favicon.png">
 
     <title>Filters</title><link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.2/../">
-        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,7 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/builders/filters.md" target="_blank" title="Edit builders/filters.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.2/builders/">Builders</a> <i class="fa fa-angle-right"></i></li><li>Filters</li>
 </ul>
@@ -362,7 +364,7 @@ any method that expects a query filter.</p>
 
 <p>This example creates a filter that selects all documents where the value of the <code>qty</code> field is either <code>5</code> or <code>20</code>:</p>
 
-<pre><code class="language-java">in(&quot;qty&quot;, 5, 15)
+<pre><code class="language-java">in(&quot;qty&quot;, 5, 20)
 </code></pre>
 
 <p>This example creates a filter that selects all documents because the predicate is empty:</p>
@@ -480,7 +482,7 @@ is equal to <code>true</code> or the <code>qty</code> field value is less than <
 <ul>
 <li><code>mod</code>: Performs a modulo operation on the value of a field and selects documents with a specified result.</li>
 <li><code>regex</code>: Selects documents where values match a specified regular expression.</li>
-<li><code>text</code>: Selects documemts matching a full-text search expression.</li>
+<li><code>text</code>: Selects documents matching a full-text search expression.</li>
 <li><code>where</code>: Matches documents that satisfy a JavaScript expression.</li>
 </ul>
 

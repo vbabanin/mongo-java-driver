@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:02:27.61">
+<meta name="date" content="2022-01-24T16:21:49.36">
 <link rel="shortcut icon" href="/mongo-java-driver/4.0/img/favicon.png">
 
     <title>POJOs</title><link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.0/../">
-        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,7 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/bson/pojos.md" target="_blank" title="Edit bson/pojos.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.0/bson/">BSON</a> <i class="fa fa-angle-right"></i></li><li>POJOs</li>
 </ul>
@@ -383,7 +385,7 @@ encoded and decoded.</p>
 <p>Automatic POJO support can be provided by setting <code>PojoCodecProvider.Builder#automatic(true)</code>, once built the <code>PojoCodecProvider</code> will
 automatically create a POJO <code>Codec</code> for any class that contains at least one serializable or deserializable property.</p>
 
-<p>The entry point for customisable POJO support is the <code>PojoCodecProvider</code>. New instances can be created via the
+<p>The entry point for customizable POJO support is the <code>PojoCodecProvider</code>. New instances can be created via the
 <a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/PojoCodecProvider.html#builder
 "><code>PojoCodecProvider.builder()</code></a> method. The <code>builder</code> allows users to
 register any combination of:</p>
@@ -704,6 +706,9 @@ configure if a property is serialized and / or deserialized.</li>
 <li><a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/annotations/BsonProperty.html
 "><code>BsonProperty</code></a>. Allows for an alternative document key
 name when converting the POJO field to BSON. Also, allows a field to turn on using a discriminator when storing a POJO value.</li>
+<li><a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/annotations/BsonRepresentation.html
+"><code>BsonRepresentation</code></a>. Allows for the type of property stored
+in the database to be different from the type of the property in the POJO.</li>
 </ul>
 
 <p>Annotations can be applied to read and / or write contexts by configuring the getter / setter methods. Any annotations applied to a field
@@ -717,7 +722,9 @@ are applied to both read and write contexts.</p>
 public final class Person {
 
     @BsonId
+    @BsonRepresentation(BsonType.ObjectId)
     public String personId;
+
     public String firstName;
 
     @BsonProperty(&quot;surname&quot;)
@@ -737,7 +744,7 @@ public final class Person {
 
 <p>The <code>Person</code> POJO Will produce BSON similar to:</p>
 
-<pre><code class="language-json">{ &quot;_id&quot;: &quot;1234567890&quot;, &quot;_t&quot;: &quot;Person&quot;, &quot;firstName&quot;: &quot;Alan&quot;, &quot;surname&quot;: &quot;Turing&quot;,
+<pre><code class="language-json">{ &quot;_id&quot;: {&quot;$oid&quot;: &quot;111111111111111111111111&quot;}, &quot;_t&quot;: &quot;Person&quot;, &quot;firstName&quot;: &quot;Alan&quot;, &quot;surname&quot;: &quot;Turing&quot;,
   &quot;address&quot;: { &quot;_t&quot;: &quot;Address&quot;, &quot;address&quot;: &quot;The Mansion&quot;, &quot;street&quot;: &quot;Sherwood Drive&quot;, 
                &quot;town&quot;: &quot;Bletchley&quot;, &quot;postcode&quot;: &quot;MK3 6EB&quot; } }
 </code></pre>
@@ -819,13 +826,27 @@ public final class Person {
 <h3 id="changing-what-is-serialized">Changing what is serialized</h3>
 
 <p>By default <code>null</code> values aren&rsquo;t serialized. This is controlled by the default implementation of the
-<a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/FieldSerialization.html
-"><code>FieldSerialization</code></a> interface. Custom implementations can be set on
+<a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/PropertySerialization.html
+"><code>PropertySerialization</code></a> interface. Custom implementations can be set on
 the <code>PropertyModelBuilder</code> which is available from the <code>ClassModelBuilder</code>.</p>
 
 <p>The <a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/annotations/BsonIgnore.html
 "><code>BsonIgnore</code></a> can be used along with the <code>DEFAULT_CONVENTIONS</code> to mark
 a property to be ignored when serializing and or deserializing.</p>
+
+<h3 id="specifying-the-bson-type">Specifying the BSON Type</h3>
+
+<p>For some types, you can specify what BSON type you want used to represent the value by using <code>@BsonRepresentation</code>.
+For example, to specify that a <code>String</code> should be represented as an <code>ObjectId</code>:</p>
+
+<pre><code class="language-java">public class MyClass {
+    @BsonRepresentation(BsonType.ObjectId)
+    public String id;
+}
+</code></pre>
+
+<p>Currently, the only supported type is <code>ObjectId</code> for <code>String</code> properties. This allows you to
+store the id as an <code>ObjectId</code>, while remaining free of any dependencies on the driver in your class.</p>
 <div id="btnv"><div class="pull-left">
   <a class="navigation prev" href="/mongo-java-driver/4.0/bson/codecs/">
       <i class="fa fa-long-arrow-left"> </i> Codec and CodecRegistry
@@ -854,6 +875,7 @@ a property to be ignored when serializing and or deserializing.</p>
 <li><a href="#properties-with-abstract-or-interface-types">Properties with abstract or interface types.</a></li>
 <li><a href="#supporting-pojos-without-no-args-constructors">Supporting POJOs without no args constructors</a></li>
 <li><a href="#changing-what-is-serialized">Changing what is serialized</a></li>
+<li><a href="#specifying-the-bson-type">Specifying the BSON Type</a></li>
 </ul></li>
 </ul></li>
 </ul>

@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-04-06T12:12:05.74">
+<meta name="date" content="2022-01-24T16:21:51.51">
 <link rel="shortcut icon" href="/mongo-java-driver/4.2/img/favicon.png">
 
     <title>Create Indexes</title><link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.2/../">
-        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,8 +312,7 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver-scala/tutorials/indexes.md" target="_blank" title="Edit driver-scala/tutorials/indexes.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.2/driver-scala/">Scala Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.2/driver-scala/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li>Create Indexes</li>
 </ul>
@@ -481,24 +484,6 @@ val collection: MongoCollection[Document] = database.getCollection(&quot;restaur
           .printResults()
 </code></pre>
 
-<h3 id="geohaystack">geoHaystack</h3>
-
-<p>To create a specification for a <a href="http://docs.mongodb.org/manual/core/geohaystack/
-"><code>geoHaystack</code> index</a>, use the <a href="/mongo-java-driver/4.2/apidocs/mongo-scala-driver/org/mongodb/scala/model/Indexes$.html#geoHaystack(fieldName:String,additional:org.mongodb.scala.bson.conversions.Bson):org.mongodb.scala.bson.conversions.Bson
-"><code>Indexes.geoHaystack</code></a> method. <code>geoHaystack</code> indexes can improve performance on queries that use flat geometries.</p>
-
-<p>The following example creates a <code>geoHaystack</code> index on the <code>contact.location</code> field and an ascending index on the <code>stars</code> field:</p>
-
-<pre><code class="language-scala">val haystackOption = IndexOptions().bucketSize(1.0)
-collection.createIndex(
-            Indexes.geoHaystack(&quot;contact.location&quot;, Indexes.ascending(&quot;stars&quot;)),
-            haystackOption)
-        .printResults()
-</code></pre>
-
-<p>To query a haystack index, use the <a href="http://docs.mongodb.org/manual/reference/command/geoSearch
-"><code>geoSearch</code></a> command.</p>
-
 <h2 id="indexoptions">IndexOptions</h2>
 
 <pre><code class="language-scala">import org.mongodb.scala.model.IndexOptions
@@ -585,7 +570,6 @@ collection.createIndex(
 <li><a href="#geospatial-indexes">Geospatial Indexes</a>
 <ul>
 <li><a href="#2dsphere"><code>2dsphere</code></a></li>
-<li><a href="#geohaystack">geoHaystack</a></li>
 </ul></li>
 <li><a href="#indexoptions">IndexOptions</a>
 <ul>

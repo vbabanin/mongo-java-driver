@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:09">
+<meta name="date" content="2022-01-24T16:21:50.44">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>What&#39;s New</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,13 +312,72 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/whats-new.md" target="_blank" title="Edit whats-new.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li>What&#39;s New</li>
 </ul>
 </div>
+
+<h1 id="what-s-new-in-4-4">What&rsquo;s new in 4.4</h1>
+
+<ul>
+<li>Compatibility with MongoDB 5.1 and support for Java 17</li>
+<li>Added support for index hints in an AggregateIterable</li>
+<li>Added support for the $merge and $out aggregation stages on secondaries</li>
+<li>Use of the <code>mergeObjects()</code> method in the Updates builder</li>
+<li>DocumentCodec does not ignore a CodecRegistry when writing to an Iterable or a Map instance</li>
+</ul>
+
+<h1 id="what-s-new-in-4-3">What&rsquo;s new in 4.3</h1>
+
+<p>This release fully supports all MongoDB releases from versions 2.6 to 4.4. It also supports some features of the next release of MongoDB.</p>
+
+<p>New features of the 4.3 Java driver release include:</p>
+
+<ul>
+<li>Added support for the MongoDB Versioned API.  See the
+<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/ServerApi.html
+"><code>ServerApi</code></a> API documentation for details.</li>
+<li>Removed most restrictions on allowed characters in field names of documents being inserted or replaced.  This is a behavioral change
+for any application that is relying on client-side enforcement of these restrictions. In particular:
+
+<ul>
+<li>Restrictions on field names containing the &ldquo;.&rdquo; character have been removed. This affects all insert and replace operations.</li>
+<li>Restrictions on field names starting with the &ldquo;$&rdquo; character have been removed for all insert operations.</li>
+<li>Restrictions in nested documents on field names starting with the &ldquo;$&rdquo; character have been removed for all replace operations.</li>
+<li>Restrictions in the top-level document on field names starting with the &ldquo;$&rdquo; character remain for all replace operations. This is
+primarily to prevent accidental use of a replace operation when the intention was to use an update operation.</li>
+<li>Note that unacknowledged writes using dollar-prefixed or dotted keys may be silently rejected by pre-5.0 servers, where some
+restrictions on field names are still enforced in the server.</li>
+</ul></li>
+<li>Added support for setting
+<a href="https://netty.io/">Netty</a> <a href="https://netty.io/4.1/api/io/netty/handler/ssl/SslContext.html
+"><code>io.netty.handler.ssl.SslContext</code></a>,
+which may be used as a convenient way to utilize <a href="https://www.openssl.org/">OpenSSL</a> as an alternative
+to the TLS/SSL protocol implementation in a JDK.</li>
+<li>Added <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/client/model/Aggregates.html#setWindowFields(TExpression,org.bson.conversions.Bson,java.util.List)
+">builders</a>
+for the new <a href="https://dochub.mongodb.org/core/window-functions-set-window-fields"><code>$setWindowFields</code></a>
+pipeline stage of an aggregation pipeline.</li>
+</ul>
+
+<h1 id="what-s-new-in-4-2">What&rsquo;s new in 4.2</h1>
+
+<p>This release fully supports all MongoDB releases from versions 2.6 to 4.4. New features of the 4.2 Java driver release include:</p>
+
+<ul>
+<li>The Reactive Streams driver now utilizes <a href="https://projectreactor.io/">Project Reactor</a> internally. Project reactor follows
+the Reactive Streams specification and has greatly simplified the implementation of the driver.</li>
+<li>Added support for Azure and GCP key stores to client-side field level encryption.</li>
+<li>Added support for caching Kerberos tickets so that they can be re-used for multiple authentication requests.</li>
+<li>Added support for constructing legacy <code>com.mongodb.MongoClient</code> instances with <code>MongoClientSettings</code> or <code>ConnectionString</code> as
+the configuration, instead of <code>MongoClientOptions</code> or <code>MongoClientURI</code>.</li>
+<li>Added support for <code>explain</code> of <code>find</code> and <code>aggregate</code> commands.</li>
+<li>Added a <code>JsonObject</code> class to make encoding from and decoding to JSON more efficient by avoiding an intermediate <code>Map</code> representation.</li>
+<li>Added a <code>BsonRepresentation</code> annotation that allows <code>ObjectId</code> BSON values to be represented as <code>String</code>s in POJO classes.</li>
+<li>Added support for the <code>BsonIgnore</code> annotation in Scala case classes.</li>
+<li>Added a <code>Filters.empty()</code> method.</li>
+</ul>
 
 <h1 id="what-s-new-in-4-1">What&rsquo;s new in 4.1</h1>
 
@@ -571,9 +634,9 @@ in debugging:</p>
 
 <p>Here&rsquo;s an example</p>
 
-<pre><code>10:37:29.099 [cluster-ClusterId {value='5a466138741fc252712a6d71', description='null'}-127.0.0.1:27017] DEBUG org.mongodb.driver.protocol.command - 
-Sending command '{ &quot;ismaster&quot; : 1, &quot;$db&quot; : &quot;admin&quot; } ...' with request id 4 to database admin on connection [connectionId{localValue:1, serverValue:1958}] to server 127.0.0.1:27017
-10:37:29.104 [cluster-ClusterId{value='5a466138741fc252712a6d71', description='null'}-127.0.0.1:27017] DEBUG org.mongodb.driver.protocol.command - 
+<pre><code>10:37:29.099 [cluster-ClusterId {value='5a466138741fc252712a6d71', description='null'}-127.0.0.1:27017] DEBUG org.mongodb.driver.protocol.command -
+Sending command '{ &quot;hello&quot; : 1, &quot;$db&quot; : &quot;admin&quot; } ...' with request id 4 to database admin on connection [connectionId{localValue:1, serverValue:1958}] to server 127.0.0.1:27017
+10:37:29.104 [cluster-ClusterId{value='5a466138741fc252712a6d71', description='null'}-127.0.0.1:27017] DEBUG org.mongodb.driver.protocol.command -
 Execution of command with request id 4 completed successfully in 22.44 ms on connection [connectionId {localValue:1, serverValue:1958}] to server 127.0.0.1:27017
 </code></pre>
 
@@ -592,8 +655,8 @@ BsonDocument embeddedDoc = doc.getDocument(&quot;embeddedDoc&quot;);
 // returns a RawBsonArray that is a slice of the bytes from the containing doc
 BsonArray embeddedArray = doc.getArray(&quot;embeddedArray&quot;);
 
-// returns a RawBsonDocument that is a slice of the bytes from the containing array 
-BsonDocument embeddedDoc2 = (BsonDocument) embeddedArray.get(0); 
+// returns a RawBsonDocument that is a slice of the bytes from the containing array
+BsonDocument embeddedDoc2 = (BsonDocument) embeddedArray.get(0);
 </code></pre>
 
 <h2 id="what-s-new-in-3-6">What&rsquo;s New in 3.6</h2>
@@ -612,7 +675,7 @@ BsonDocument embeddedDoc2 = (BsonDocument) embeddedArray.get(0);
 <h3 id="retryable-writes">Retryable writes</h3>
 
 <p>The 3.6 release adds support for retryable writes using the <code>retryWrites</code> option in
-<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/MongoClientOptions.html
+<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-legacy/com/mongodb/MongoClientOptions.html
 "><code>MongoClientOptions</code></a>.</p>
 
 <h3 id="compression">Compression</h3>
@@ -633,7 +696,7 @@ BsonDocument embeddedDoc2 = (BsonDocument) embeddedArray.get(0);
 <h3 id="application-configured-server-selection">Application-configured server selection</h3>
 
 <p>The 3.6 release adds support for application-configured control over server selection, using the <code>serverSelector</code> option in
-<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/MongoClientOptions.html
+<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-legacy/com/mongodb/MongoClientOptions.html
 "><code>MongoClientOptions</code></a>.</p>
 
 <h3 id="pojo-codec-improvements">POJO Codec improvements</h3>
@@ -846,14 +909,14 @@ for the method:</p>
 
 collection.count(Filters.eq(&quot;category&quot;, &quot;cafe&quot;), new CountOptions().collation(collation));
 
-collection.updateOne(Filters.eq(&quot;category&quot;, &quot;cafe&quot;), set(&quot;stars&quot;, 1), 
+collection.updateOne(Filters.eq(&quot;category&quot;, &quot;cafe&quot;), set(&quot;stars&quot;, 1),
                      new UpdateOptions().collation(collation));
 
 collection.bulkWrite(Arrays.asList(
                 new UpdateOneModel&lt;&gt;(new Document(&quot;category&quot;, &quot;cafe&quot;),
-                                     new Document(&quot;$set&quot;, new Document(&quot;x&quot;, 0)), 
+                                     new Document(&quot;$set&quot;, new Document(&quot;x&quot;, 0)),
                                      new UpdateOptions().collation(collation)),
-                new DeleteOneModel&lt;&gt;(new Document(&quot;category&quot;, &quot;cafe&quot;), 
+                new DeleteOneModel&lt;&gt;(new Document(&quot;category&quot;, &quot;cafe&quot;),
                                      new DeleteOptions().collation(collation))));
 </code></pre>
 
@@ -887,6 +950,9 @@ collection.bulkWrite(Arrays.asList(
 <div class="wrapper"><div class="toc">
     <span class="toc-header">On this page</span><nav id="TableOfContents">
 <ul>
+<li><a href="#what-s-new-in-4-4">What&rsquo;s new in 4.4</a></li>
+<li><a href="#what-s-new-in-4-3">What&rsquo;s new in 4.3</a></li>
+<li><a href="#what-s-new-in-4-2">What&rsquo;s new in 4.2</a></li>
 <li><a href="#what-s-new-in-4-1">What&rsquo;s new in 4.1</a></li>
 <li><a href="#what-s-new-in-4-0">What&rsquo;s new in 4.0</a></li>
 <li><a href="#what-s-new-in-3-12">What&rsquo;s new in 3.12</a>

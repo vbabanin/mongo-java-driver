@@ -1,15 +1,35 @@
 function initializeJS() {
     jQuery('.toggle-nav').click(function () {
-        if (jQuery('#sidebar > .ssidebar').is(":visible") === true) {
-            jQuery('#sidebar > .ssidebar').hide();
-            jQuery('#sidebar > .nav-footer').hide();
-            jQuery("#container").addClass("sidebar-closed");
+        var $container = jQuery('#container'),
+            $sidebar = jQuery('#sidebar'),
+            $ssidebar = jQuery('#sidebar > .ssidebar'),
+            $footer = jQuery('#sidebar > .nav-footer'),
+            isVisible = $ssidebar.is(":visible") && !$container.hasClass("sidebar-closed-winSize");
+
+        if (isVisible) {
+            $container.addClass("sidebar-closed");
+            $ssidebar.hide();
+            $footer.hide();
+            $sidebar.removeClass("reveal");
         } else {
-            jQuery("#container").removeClass("sidebar-closed");
-            jQuery('#sidebar > .ssidebar').show();
-            jQuery('#sidebar > .nav-footer').show();
+            $container.removeClass("sidebar-closed");
+            $container.removeClass("sidebar-closed-winSize");
+            $sidebar.addClass("reveal");
+            $ssidebar.show();
+            $footer.show();
         }
     });
+
+    var resizer = function() {
+        var $container = jQuery('#container');
+        if (jQuery(window).width() <= 1093) {
+            $container.addClass("sidebar-closed-winSize");
+        } else {
+            $container.removeClass("sidebar-closed-winSize");
+        }
+    };
+    jQuery(window).resize(resizer);
+    resizer();
 };
 
 jQuery(document).ready(function() {
@@ -25,7 +45,7 @@ jQuery(document).ready(function() {
     });
     jQuery('.body table').addClass('table').addClass('table-striped');
     var siteInput = $('#search input[name="site"]');
-    if (siteInput.val().substring(0, 4) != "http") {
+    if (siteInput.val().indexOf(window.location.hostname) < 0) {
         siteInput.attr("value", window.location.hostname + siteInput.val());
     }
     jQuery("#search form").submit(function() {

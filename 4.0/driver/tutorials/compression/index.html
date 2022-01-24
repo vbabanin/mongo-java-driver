@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:02:27.6">
+<meta name="date" content="2022-01-24T16:21:49.35">
 <link rel="shortcut icon" href="/mongo-java-driver/4.0/img/favicon.png">
 
     <title>Compression</title><link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.0/../">
-        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/compression.md" target="_blank" title="Edit driver/tutorials/compression.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.0/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.0/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.0/driver/tutorials/connect-to-mongodb/">Connect to MongoDB</a> <i class="fa fa-angle-right"></i></li><li>Compression</li>
 </ul>
@@ -329,10 +334,10 @@ release.</li>
 </ul>
 
 <p>The driver will negotiate which, if any, compression algorithm is used based on capabilities advertised by the server in
-the <a href="http://docs.mongodb.org/manual/reference/command/isMaster/
-">ismaster</a> command response.</p>
+the <a href="http://docs.mongodb.org/manual/reference/command/hello/
+">hello</a> command response.</p>
 
-<h3 id="specify-compression-via-mongoclienturi">Specify compression via <code>MongoClientURI</code></h3>
+<h3 id="specify-compression-via-connectionstring">Specify compression via <code>ConnectionString</code></h3>
 
 <pre><code class="language-java">import com.mongodb.ConnectionString;
 import com.mongodb.client.MongoClients;
@@ -437,7 +442,7 @@ MongoClient client = MongoClients.create(settings);
 <ul>
 <li><a href="#compression">Compression</a>
 <ul>
-<li><a href="#specify-compression-via-mongoclienturi">Specify compression via <code>MongoClientURI</code></a></li>
+<li><a href="#specify-compression-via-connectionstring">Specify compression via <code>ConnectionString</code></a></li>
 <li><a href="#specify-compression-via-mongoclientsettings">Specify compression via <code>MongoClientSettings</code></a></li>
 <li><a href="#dependencies">Dependencies</a></li>
 </ul></li>

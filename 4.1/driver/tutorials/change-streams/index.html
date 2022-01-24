@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:08.93">
+<meta name="date" content="2022-01-24T16:21:50.33">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>Change Streams</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/change-streams.md" target="_blank" title="Edit driver/tutorials/change-streams.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.1/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li>Change Streams</li>
 </ul>
@@ -333,8 +338,7 @@ to resume if it encounters a potentially recoverable error.</p>
 <li><p>Include the following import statements:</p></li>
 </ul>
 
-<pre><code class="language-java">import com.mongodb.Block;
-import com.mongodb.client.MongoClients;
+<pre><code class="language-java">import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoClient;
 
 import com.mongodb.client.MongoCollection;
@@ -344,18 +348,6 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
-</code></pre>
-
-<ul>
-<li>Include the following code which the examples in the tutorials will use to print the results of the change stream:</li>
-</ul>
-
-<pre><code class="language-java">Block&lt;ChangeStreamDocument&lt;Document&gt;&gt; printBlock = new Block&lt;&gt;() {
-    @Override
-    public void apply(final ChangeStreamDocument&lt;Document&gt; changeStreamDocument) {
-        System.out.println(changeStreamDocument);
-    }
-};
 </code></pre>
 
 <h2 id="connect-to-a-mongodb-deployment">Connect to a MongoDB Deployment</h2>
@@ -379,7 +371,7 @@ MongoCollection&lt;Document&gt; collection = database.getCollection(&quot;restau
 
 <p>In the following example, the change stream prints out all changes it observes.</p>
 
-<pre><code class="language-java">collection.watch().forEach(printBlock);
+<pre><code class="language-java">collection.watch().forEach(System.out::println);
 </code></pre>
 
 <h2 id="watch-the-database">Watch the database</h2>
@@ -390,7 +382,7 @@ create such a change stream use one of the <a href="/mongo-java-driver/4.1/apido
 
 <p>In the following example, the change stream prints out all the changes it observes on the given database.</p>
 
-<pre><code class="language-java">database.watch().forEach(printBlock);
+<pre><code class="language-java">database.watch().forEach(System.out::println);
 </code></pre>
 
 <h2 id="watch-all-databases">Watch all databases</h2>
@@ -403,7 +395,7 @@ in a MongoDB deployment. To create such a change stream use one of the
 <p>In the following example, the change stream prints out all the changes it observes on the deployment to which the <code>MongoClient</code> is
 connected</p>
 
-<pre><code class="language-java">mongoClient.watch().forEach(printBlock);
+<pre><code class="language-java">mongoClient.watch().forEach(System.out::println);
 </code></pre>
 
 <h2 id="filtering-content">Filtering content</h2>
@@ -420,13 +412,14 @@ the data returned by the <code>$changeStream</code> operator. Note: not all aggr
 "><code>$match</code></a> stage to filter for documents where the <code>operationType</code>
 is either an <code>insert</code>, <code>update</code>, <code>replace</code> or <code>delete</code>.</p></li>
 
-<li><p>Then, it sets the <code>fullDocument</code> to <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/client/model/FullDocument.html#UPDATE_LOOKUP
+<li><p>Then, it sets the <code>fullDocument</code> to <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/client/model/changestream/FullDocument.html#UPDATE_LOOKUP
 "><code>FullDocument.UPDATE_LOOKUP</code></a>,
 so that the document after the update is included in the results.</p></li>
 </ul>
 
 <pre><code class="language-java">collection.watch(asList(Aggregates.match(Filters.in(&quot;operationType&quot;, asList(&quot;insert&quot;, &quot;update&quot;, &quot;replace&quot;, &quot;delete&quot;)))))
-        .fullDocument(FullDocument.UPDATE_LOOKUP).forEach(printBlock);
+        .fullDocument(FullDocument.UPDATE_LOOKUP)
+        .forEach(System.out::println);
 </code></pre>
 <div id="btnv"><div class="pull-left">
   <a class="navigation prev" href="/mongo-java-driver/4.1/driver/tutorials/aggregation/">
