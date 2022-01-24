@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:36:51.05">
+<meta name="date" content="2022-01-24T15:54:50.15">
 <link rel="shortcut icon" href="/mongo-java-driver/3.11/img/favicon.png">
 
     <title>Authentication</title><link rel="stylesheet" href="/mongo-java-driver/3.11/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/3.11/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/3.11/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/3.11/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/3.11/../">
-        <img src="/mongo-java-driver/3.11/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/3.11/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -60,7 +64,7 @@
     <div class="ssidebar nav-collapse">
       <div class="ssidebarwrapper">
         <h3>
-          <a class="index-link" href="/mongo-java-driver/3.11/../">MongoDB Java Driver</a>
+          <a class="index-link" href="/mongo-java-driver/3.11/../">MongoDB JVM Drivers</a>
           <a class="version pull-right" href="/mongo-java-driver/3.11">3.11</a>
         </h3>
 
@@ -68,7 +72,7 @@
         <ul class="sidebar-menu"><li class="toctree-l1">
     <a href="/mongo-java-driver/3.11/whats-new/"><i class='fa fa-level-up'></i>What&#39;s New</a>
   </li><li class="toctree-l1 current">
-  <a href="/mongo-java-driver/3.11/driver/" class=""><i class='fa fa-arrows-h'></i><span>MongoDB Driver</span><span class="menu-arrow fa fa-angle-down"></span></a>
+  <a href="/mongo-java-driver/3.11/driver/" class=""><i class='fa fa-arrows-h'></i><span>Java Driver</span><span class="menu-arrow fa fa-angle-down"></span></a>
     <ul  class="current"><li class="toctree-l2">
     <a href="/mongo-java-driver/3.11/driver/getting-started/installation/"><i class='fa'></i>Installation</a>
   </li><li class="toctree-l2">
@@ -123,58 +127,58 @@
   </li></ul>
   </li></ul>
   </li><li class="toctree-l1">
-  <a href="/mongo-java-driver/3.11/driver-async/" class=""><i class='fa fa-refresh'></i><span>MongoDB Async Driver</span><span class="menu-arrow fa fa-angle-right"></span></a>
+  <a href="/mongo-java-driver/3.11/driver-reactive/" class=""><i class='fa fa-refresh'></i><span>Reactive Streams</span><span class="menu-arrow fa fa-angle-right"></span></a>
     <ul ><li class="toctree-l2">
-    <a href="/mongo-java-driver/3.11/driver-async/getting-started/installation/"><i class='fa'></i>Installation</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/getting-started/installation/"><i class='fa'></i>Installation</a>
   </li><li class="toctree-l2">
-    <a href="/mongo-java-driver/3.11/driver-async/getting-started/quick-start/"><i class='fa'></i>Quick Start</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/getting-started/quick-start/"><i class='fa'></i>Quick Start</a>
   </li><li class="toctree-l2">
-    <a href="/mongo-java-driver/3.11/driver-async/getting-started/quick-start-pojo/"><i class='fa'></i>Quick Start - POJOs</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/getting-started/quick-start-pojo/"><i class='fa'></i>Quick Start - POJOs</a>
   </li><li class="toctree-l2">
-  <a href="/mongo-java-driver/3.11/driver-async/tutorials/" class=""><i class='fa fa-thumb-tack'></i><span>Tutorials</span></a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/getting-started/quick-start-primer/"><i class='fa'></i>Quick Start Primer</a>
+  </li><li class="toctree-l2">
+  <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/" class=""><i class='fa fa-thumb-tack'></i><span>Tutorials</span></a>
     <ul ><li class="toctree-l3">
-  <a href="/mongo-java-driver/3.11/driver-async/tutorials/connect-to-mongodb/" class=""><i class='fa'></i><span>Connect to MongoDB</span></a>
+  <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/connect-to-mongodb/" class=""><i class='fa'></i><span>Connect to MongoDB</span></a>
     <ul ><li class="toctree-l4">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/ssl/"><i class='fa'></i>SSL</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/ssl/"><i class='fa'></i>TLS/SSL</a>
   </li><li class="toctree-l4">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/authentication/"><i class='fa'></i>Authentication</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/authentication/"><i class='fa'></i>Authentication</a>
   </li><li class="toctree-l4">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/compression/"><i class='fa'></i>Compression</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/compression/"><i class='fa'></i>Compression</a>
   </li></ul>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/databases-collections/"><i class='fa'></i>Databases and Collections</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/databases-collections/"><i class='fa'></i>Databases and Collections</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/indexes/"><i class='fa'></i>Create Indexes</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/indexes/"><i class='fa'></i>Create Indexes</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/perform-read-operations/"><i class='fa'></i>Read Operations</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/perform-read-operations/"><i class='fa'></i>Read Operations</a>
   </li><li class="toctree-l3">
-  <a href="/mongo-java-driver/3.11/driver-async/tutorials/perform-write-operations/" class=""><i class='fa'></i><span>Write Operations</span></a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/client-side-encryption/"><i class='fa fa-lock'></i>Client Side Encryption</a>
+  </li><li class="toctree-l3">
+  <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/perform-write-operations/" class=""><i class='fa'></i><span>Write Operations</span></a>
     <ul ><li class="toctree-l4">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/bulk-writes/"><i class='fa'></i>Bulk Writes</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/bulk-writes/"><i class='fa'></i>Bulk Writes</a>
   </li></ul>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/client-side-encryption/"><i class='fa fa-lock'></i>Client Side Encryption</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/aggregation/"><i class='fa'></i>Aggregation</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/aggregation/"><i class='fa'></i>Aggregation</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/change-streams/"><i class='fa'></i>Change Streams</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/change-streams/"><i class='fa'></i>Change Streams</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/text-search/"><i class='fa'></i>Text Search</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/text-search/"><i class='fa'></i>Text Search</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/geospatial-search/"><i class='fa'></i>Geospatial Search</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/geospatial-search/"><i class='fa'></i>Geospatial Search</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/gridfs/"><i class='fa'></i>GridFS</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/gridfs/"><i class='fa'></i>GridFS</a>
-  </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/tutorials/commands/"><i class='fa'></i>Run Commands</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/tutorials/commands/"><i class='fa'></i>Run Commands</a>
   </li></ul>
   </li><li class="toctree-l2">
-  <a href="/mongo-java-driver/3.11/driver-async/reference/" class=""><i class='fa fa-book'></i><span>Reference</span></a>
+  <a href="/mongo-java-driver/3.11/driver-reactive/reference/" class=""><i class='fa fa-book'></i><span>Reference</span></a>
     <ul ><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/reference/logging/"><i class='fa'></i>Logging</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/reference/logging/"><i class='fa'></i>Logging</a>
   </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/reference/monitoring/"><i class='fa'></i>Monitoring</a>
-  </li><li class="toctree-l3">
-    <a href="/mongo-java-driver/3.11/driver-async/reference/observables/"><i class='fa'></i>Observables</a>
+    <a href="/mongo-java-driver/3.11/driver-reactive/reference/monitoring/"><i class='fa'></i>Monitoring</a>
   </li></ul>
   </li></ul>
   </li><li class="toctree-l1">
@@ -208,9 +212,90 @@
     <a href="/mongo-java-driver/3.11/builders/indexes/"><i class='fa'></i>Indexes</a>
   </li></ul>
   </li><li class="toctree-l1">
+  <a href="/mongo-java-driver/3.11/driver-scala/" class=""><i class='fa fa-refresh'></i><span>Scala Driver</span><span class="menu-arrow fa fa-angle-right"></span></a>
+    <ul ><li class="toctree-l2">
+    <a href="/mongo-java-driver/3.11/driver-scala/getting-started/installation/"><i class='fa'></i>Installation</a>
+  </li><li class="toctree-l2">
+    <a href="/mongo-java-driver/3.11/driver-scala/getting-started/quick-start/"><i class='fa'></i>Quick Start</a>
+  </li><li class="toctree-l2">
+    <a href="/mongo-java-driver/3.11/driver-scala/getting-started/quick-start-case-class/"><i class='fa'></i>Quick Start - Case Classes</a>
+  </li><li class="toctree-l2">
+    <a href="/mongo-java-driver/3.11/driver-scala/getting-started/quick-start-primer/"><i class='fa'></i>Quick Start Primer</a>
+  </li><li class="toctree-l2">
+  <a href="/mongo-java-driver/3.11/driver-scala/tutorials/" class=""><i class='fa fa-thumb-tack'></i><span>Tutorials</span></a>
+    <ul ><li class="toctree-l3">
+  <a href="/mongo-java-driver/3.11/driver-scala/tutorials/connect-to-mongodb/" class=""><i class='fa'></i><span>Connect to MongoDB</span></a>
+    <ul ><li class="toctree-l4">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/ssl/"><i class='fa'></i>TLS/SSL</a>
+  </li><li class="toctree-l4">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/authentication/"><i class='fa'></i>Authentication</a>
+  </li><li class="toctree-l4">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/compression/"><i class='fa'></i>Compression</a>
+  </li></ul>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/databases-collections/"><i class='fa'></i>Databases and Collections</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/indexes/"><i class='fa'></i>Create Indexes</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/perform-read-operations/"><i class='fa'></i>Read Operations</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/client-side-encryption/"><i class='fa fa-lock'></i>Client Side Encryption</a>
+  </li><li class="toctree-l3">
+  <a href="/mongo-java-driver/3.11/driver-scala/tutorials/perform-write-operations/" class=""><i class='fa'></i><span>Write Operations</span></a>
+    <ul ><li class="toctree-l4">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/bulk-writes/"><i class='fa'></i>Bulk Writes</a>
+  </li></ul>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/aggregation/"><i class='fa'></i>Aggregation</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/change-streams/"><i class='fa'></i>Change Streams</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/text-search/"><i class='fa'></i>Text Search</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/geospatial-search/"><i class='fa'></i>Geospatial Search</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/gridfs/"><i class='fa'></i>GridFS</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/tutorials/commands/"><i class='fa'></i>Run Commands</a>
+  </li></ul>
+  </li><li class="toctree-l2">
+  <a href="/mongo-java-driver/3.11/driver-scala/reference/" class=""><i class='fa fa-book'></i><span>Reference</span></a>
+    <ul ><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/reference/logging/"><i class='fa'></i>Logging</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/reference/monitoring/"><i class='fa'></i>Monitoring</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/reference/observables/"><i class='fa'></i>Observables</a>
+  </li></ul>
+  </li><li class="toctree-l2">
+  <a href="/mongo-java-driver/3.11/driver-scala/bson/" class=""><i class='fa fa-th'></i><span>BSON</span></a>
+    <ul ><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/bson/scala-documents/"><i class='fa'></i>Documents</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/bson/macros/"><i class='fa fa-cog'></i>Macros</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/bson/scala-extended-json/"><i class='fa'></i>Extended JSON</a>
+  </li></ul>
+  </li><li class="toctree-l2">
+  <a href="/mongo-java-driver/3.11/driver-scala/builders/" class=""><i class='fa fa-wrench'></i><span>Builders</span></a>
+    <ul ><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/filters/"><i class='fa'></i>Filters</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/projections/"><i class='fa'></i>Projections</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/sorts/"><i class='fa'></i>Sort Criteria</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/aggregation/"><i class='fa'></i>Aggregation</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/updates/"><i class='fa'></i>Updates</a>
+  </li><li class="toctree-l3">
+    <a href="/mongo-java-driver/3.11/driver-scala/builders/indexes/"><i class='fa'></i>Indexes</a>
+  </li></ul>
+  </li></ul>
+  </li><li class="toctree-l1">
     <a href="/mongo-java-driver/3.11/upgrading/"><i class='fa fa-level-up'></i>Upgrade Considerations</a>
   </li><li class="toctree-l1">
-    <a href="/mongo-java-driver/3.11/javadoc"><i class='fa fa-file-text-o'></i>API Documentation</a>
+    <a href="/mongo-java-driver/3.11/apidocs/"><i class='fa fa-file-text-o'></i>API Documentation</a>
   </li><li class="toctree-l1">
     <a href="https://github.com/mongodb/mongo-java-driver/tree/master"><i class='fa fa-github'></i>Source Code</a>
   </li><li class="toctree-l1">
@@ -219,45 +304,20 @@
         
     </div>
   </div></aside>
-<div class="option-popup closed hidden" id="optionsVersionsPopup">
-<div class="option-header">
-  <i class="fa fa-gear"></i>
-  <span>OPTIONS</span>
-  <i class="fa fa-angle-up pull-right"></i>
-</div>
-<div class="option-body">
-  <ul>
-      
-      <li>
-        <label>Version</label>
-        <div class="btn-group btn-group-xs pull-right">
-          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            Select Version <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" role="menu" id="optionsVersionsMenu">
-          </ul>
-        </div>
-      </li>
-
-   
 
 
-    
-
-  </ul>
-</div>
-</div>
 
       <section id="main-content" class="content">
           <section class="main-column pull-left">
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/authentication.md" target="_blank" title="Edit driver/tutorials/authentication.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
-<ul><li><a href="/mongo-java-driver/3.11/driver/">MongoDB Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/3.11/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/3.11/driver/tutorials/connect-to-mongodb/">Connect to MongoDB</a> <i class="fa fa-angle-right"></i></li><li>Authentication</li>
+<ul><li><a href="/mongo-java-driver/3.11/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/3.11/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/3.11/driver/tutorials/connect-to-mongodb/">Connect to MongoDB</a> <i class="fa fa-angle-right"></i></li><li>Authentication</li>
 </ul>
 </div>
 
@@ -283,19 +343,20 @@ import com.mongodb.client.MongoClient;
 <p>Legacy MongoClient API:</p>
 
 <pre><code class="language-java">import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
 </code></pre>
 
 <p>An authentication credential is represented as an instance of the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html
-"><code>MongoCredential</code></a> class. The <a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html
+"><code>MongoCredential</code></a> class. The <a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html
 "><code>MongoCredential</code></a> class includes static
 factory methods for each of the supported authentication mechanisms.</p>
 
-<p>You can also use a <a href="/mongo-java-driver/3.11/javadoc//com/mongodb/MongoClientURI.html
-"><code>MongoClientURI</code></a> and pass it to a
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoClient.html
-"><code>MongoClient()</code></a> constructor that takes a <code>MongoClientURI</code> parameter.</p>
+<p>You can also use a <a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/ConnectionString.html
+"><code>ConnectionString</code></a> and pass it to a
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-legacy/com/mongodb/MongoClient.html
+"><code>MongoClient()</code></a> constructor that takes a <code>ConnectionString</code>
+parameter.</p>
 
 <h2 id="default-authentication-mechanism">Default Authentication Mechanism</h2>
 
@@ -310,7 +371,7 @@ factory methods for each of the supported authentication mechanisms.</p>
 
 <p>To create a credential that will authenticate using the default
 authentication mechanism regardless of server version, create a
-credential using the <a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createCredential-java.lang.String-java.lang.String-char:A-
+credential using the <a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createCredential(java.lang.String,java.lang.String,char[])
 "><code>createCredential</code></a>
 static factory method:</p>
 
@@ -325,7 +386,7 @@ MongoCredential credential = MongoCredential.createCredential(user, source, pass
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -333,7 +394,12 @@ MongoCredential credential = MongoCredential.createCredential(user, source, pass
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string without explicitly specifying the authentication mechanism. Using the new MongoClient API:</p>
@@ -343,8 +409,7 @@ MongoCredential credential = MongoCredential.createCredential(user, source, pass
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://user1:pwd1@host1/?authSource=db1&quot;);
-MongoClient mongoClient = new MongoClient(uri);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://user1:pwd1@host1/?authSource=db1&quot;);
 </code></pre>
 
 <p>For challenge and response mechanisms, using the default authentication mechanism is the recommended approach as it will make upgrading
@@ -368,7 +433,7 @@ which uses the <code>SHA-256</code> hashing function.</p>
 
 <p>To explicitly create a credential of type <a href="http://docs.mongodb.org/manual/core/security-scram/
 "><code>SCRAM-SHA-256</code></a>, use the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createScramSha256Credential-java.lang.String-java.lang.String-char:A-
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createScramSha256Credential(java.lang.String,java.lang.String,char[])
 "><code>createScramSha256Credential</code></a>
 method:</p>
 
@@ -391,7 +456,12 @@ MongoCredential credential = MongoCredential.createScramSha256Credential(user, s
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=SCRAM-SHA-256</code>. Using the new MongoClient API:</p>
@@ -401,15 +471,14 @@ MongoCredential credential = MongoCredential.createScramSha256Credential(user, s
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=SCRAM-SHA-256&quot;);
-MongoClient mongoClient = new MongoClient(uri);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=SCRAM-SHA-256&quot;);
 </code></pre>
 
 <h3 id="scram-sha-1">SCRAM-SHA-1</h3>
 
 <p>To explicitly create a credential of type <a href="http://docs.mongodb.org/manual/core/security-scram/
 "><code>SCRAM-SHA-1</code></a>, use the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createScramSha1Credential-java.lang.String-java.lang.String-char:A-
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createScramSha1Credential(java.lang.String,java.lang.String,char[])
 "><code>createScramSha1Credential</code></a>
 method:</p>
 
@@ -424,7 +493,7 @@ MongoCredential credential = MongoCredential.createScramSha1Credential(user, sou
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -432,7 +501,12 @@ MongoCredential credential = MongoCredential.createScramSha1Credential(user, sou
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=SCRAM-SHA-1</code>. Using the new MongoClient API:</p>
@@ -442,8 +516,7 @@ MongoCredential credential = MongoCredential.createScramSha1Credential(user, sou
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=SCRAM-SHA-1&quot;);
-MongoClient mongoClient = new MongoClient(uri);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=SCRAM-SHA-1&quot;);
 </code></pre>
 
 <h2 id="mongodb-cr">MONGODB-CR</h2>
@@ -459,7 +532,7 @@ For information on upgrading to <code>SCRAM</code>, see Upgrade to <a href="http
 
 
 <p>To explicitly create a credential of type <a href="http://docs.mongodb.org/manual/core/security-mongodb-cr
-"><code>MONGODB-CR</code></a> use the <a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createMongoCRCredential-java.lang.String-java.lang.String-char:A-
+"><code>MONGODB-CR</code></a> use the <a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createMongoCRCredential(java.lang.String,java.lang.String,char[])
 "><code>createMongCRCredential</code></a>
 static factory method:</p>
 
@@ -474,7 +547,7 @@ MongoCredential credential = MongoCredential.createMongoCRCredential(user, datab
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -482,7 +555,12 @@ MongoCredential credential = MongoCredential.createMongoCRCredential(user, datab
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=MONGODB-CR</code>. Using the new MongoClient API:</p>
@@ -492,8 +570,7 @@ MongoCredential credential = MongoCredential.createMongoCRCredential(user, datab
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=MONGODB-CR&quot;);
-MongoClient mongoClient = new MongoClient(uri);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://user1:pwd1@host1/?authSource=db1&amp;authMechanism=MONGODB-CR&quot;);
 </code></pre>
 
 <div class="admonition note">
@@ -515,20 +592,19 @@ of the X.509 certificate.</p>
 <p>X.509 authentication requires the use of SSL connections with
 certificate validation and is available in MongoDB 2.6 and later. To
 create a credential of this type use the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createMongoX509Credential-java.lang.String-
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createMongoX509Credential(java.lang.String)
 "><code>createMongoX509Credential</code></a> static factory method:</p>
 
 <pre><code class="language-java">String user;     // The X.509 certificate derived user name, e.g. &quot;CN=user,OU=OrgUnit,O=myOrg,...&quot;
 // ...
 MongoCredential credential = MongoCredential.createMongoX509Credential(user);
-MongoClientOptions options = MongoClientOptions.builder().sslEnabled(true).build();
 </code></pre>
 
 <p>and then construct a MongoClient with that credential.  Using the new (since 3.7) MongoClient API:</p>
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -536,7 +612,12 @@ MongoClientOptions options = MongoClientOptions.builder().sslEnabled(true).build
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential, options);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=MONGODB-X509</code>. Using the new MongoClient API:</p>
@@ -546,22 +627,123 @@ MongoClientOptions options = MongoClientOptions.builder().sslEnabled(true).build
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://subjectName@host1/?authMechanism=MONGODB-X509&amp;ssl=true&quot;);
-MongoClient mongoClient = new MongoClient(uri);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://subjectName@host1/?authMechanism=MONGODB-X509&amp;ssl=true&quot;);
 </code></pre>
 
-<p>See the MongoDB server <a href="/mongo-java-driver/3.11/javadoc/tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user.html
+<p>See the MongoDB server <a href="http://docs.mongodb.org/manual/tutorial/configure-x509-client-authentication/#add-x-509-certificate-subject-as-a-user
 ">x.509 tutorial</a>
 for more information about determining the subject
 name from the certificate.</p>
+
+<h2 id="mongodb-aws">MONGODB-AWS</h2>
+
+<div class="admonition note">
+<h5 class="admonition-title">Note</h5>
+<p>The MONGODB-AWS authentication mechanism is only available in MongoDB
+versions 4.4 and later.</p>
+
+</div>
+
+
+<p>The MONGODB-AWS authentication mechanism uses your Amazon Web Services
+Identity and Access Management (AWS IAM) credentials to authenticate your
+user.</p>
+
+<p>The following code snippets show how to specify the authentication mechanism,
+using the following placeholders:</p>
+
+<ul>
+<li><code>username</code> - value of your <code>AWS_ACCESS_KEY_ID</code></li>
+<li><code>password</code> - value your <code>AWS_SECRET_ACCESS_KEY</code></li>
+<li><code>hostname</code> - network address of your MongoDB server, accessible by your client</li>
+<li><code>port</code> - port number of your MongoDB server</li>
+<li><code>authenticationDb</code> - MongoDB database that contains your user&rsquo;s
+authentication data. If you omit this parameter, the driver uses the
+default value <code>admin</code>.</li>
+<li><code>awsSessionToken</code> - value of your <code>AWS_SESSION_TOKEN</code> <em>(optional)</em></li>
+</ul>
+
+<h3 id="connection-string">Connection String</h3>
+
+<p>To specify the mechanism using a <em>connection string</em>, assign the
+<code>authMechanism</code> parameter the value <code>MONGODB-AWS</code> in your connection string.
+Your code to instantiate a <code>MongoClient</code> should resemble the following:</p>
+
+<pre><code class="language-java">MongoClient mongoClient = MongoClients.create(&quot;mongodb://&lt;username&gt;:&lt;password&gt;@&lt;hostname&gt;:&lt;port&gt;/?authSource=&lt;authenticationDb&gt;&amp;authMechanism=MONGODB-AWS&quot;);
+</code></pre>
+
+<p>If you need to specify an AWS session token, include it in the
+<code>authMechanismProperties</code> parameter as follows using the format
+<code>AWS_SESSION_TOKEN:&lt;awsSessionToken&gt;</code>. Your code to instantiate a
+<code>MongoClient</code> with a session token should resemble the following:</p>
+
+<pre><code class="language-java">MongoClient mongoClient = MongoClients.create(&quot;mongodb://&lt;username&gt;:&lt;password&gt;@&lt;hostname&gt;:&lt;port&gt;/?authSource=&lt;authenticationDb&gt;&amp;authMechanism=MONGODB-AWS&amp;authMechanismProperties=AWS_SESSION_TOKEN:&lt;awsSessionToken&gt;&quot;);
+</code></pre>
+
+<h3 id="mongocredential-1">MongoCredential</h3>
+
+<p>To specify the mechanism using the <em>MongoCredential</em> class, use the
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createAwsCredential(java.lang.String,char%5B%5D)
+"><code>createAwsCredential()</code></a>
+method. Your code to instantiate a <code>MongoClient</code> should resemble the following:</p>
+
+<pre><code class="language-java">MongoCredential credential = MongoCredential.createAwsCredential(&quot;&lt;username&gt;&quot;, &quot;&lt;password&gt;&quot;.toCharArray());
+
+MongoClient mongoClient = MongoClients.create(
+    MongoClientSettings.builder()
+        .applyToClusterSettings(builder -&gt;
+            builder.hosts(Arrays.asList(new ServerAddress(&quot;&lt;hostname&gt;&quot;, &quot;&lt;port&gt;&quot;))))
+        .credential(credential)
+        .build());
+</code></pre>
+
+<p>If you need to specify an AWS session token, you can add it using one of
+the following choices:</p>
+
+<h4 id="specify-your-aws-session-token-in-a-connection-string">Specify your AWS Session Token in a Connection String</h4>
+
+<p>If you prefer to pass the AWS session token in the connection string, you
+specify your authentication mechanism in the <code>authMechanism</code> parameter
+and your session token in the <code>authMechanismProperties</code> parameter. Then,
+add it to your <code>MongoClientSettings</code> by calling the
+<a href="{{ &quot;mongodb-driver-core&quot; &quot;com/mongodb/MongoClientSettings.Builder.html#applyConnectionString(com.mongodb.ConnectionString"><code>applyConnectionString()</code></a>&rdquo; &gt;}})
+method as follows:</p>
+
+<pre><code class="language-java">MongoCredential credential = MongoCredential.createAwsCredential(&quot;&lt;username&gt;&quot;, &quot;&lt;password&gt;&quot;.toCharArray());
+String connectionString = &quot;mongodb://&lt;hostname&gt;:&lt;port&gt;/?authSource=&lt;authenticationDb&gt;&amp;authMechanism=MONGODB-AWS&amp;authMechanismProperties=AWS_SESSION_TOKEN:&lt;awsSessionToken&gt;&quot;);
+
+MongoClient mongoClient = MongoClients.create(
+    MongoClientSettings.builder()
+        .applyConnectionString(connectionString)
+        .credential(credential)
+        .build());
+</code></pre>
+
+<h4 id="specify-your-aws-session-token-in-a-mongocredential">Specify your AWS Session Token in a MongoCredential</h4>
+
+<p>You can include your AWS session token in your <code>MongoCredential</code> instance by
+specifying it in a call to the
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#withMechanismProperty(java.lang.String,T)
+"><code>withMechanismProperty()</code></a>
+method as shown below:</p>
+
+<pre><code class="language-java">MongoCredential.createAwsCredential(&quot;&lt;username&gt;&quot;, &quot;&lt;password&gt;&quot;.toCharArray()) .withMechanismProperty(&quot;AWS_SESSION_TOKEN&quot;, &quot;&lt;awsSessionToken&gt;&quot;)
+</code></pre>
+
+<h4 id="specify-your-aws-session-token-in-an-environment-variable">Specify your AWS Session Token in an Environment Variable</h4>
+
+<p>In your client execution environment, set an environment variable called
+<code>AWS_SESSION_TOKEN</code> and assign your token to it. The value is
+automatically picked up by your MongoClient when you specify the
+<code>MONGODB-AWS</code> authentication mechanism.</p>
 
 <h2 id="gssapi">Kerberos (GSSAPI)</h2>
 
 <p><a href="http://www.mongodb.com/products/mongodb-enterprise">MongoDB Enterprise</a> supports proxy
 authentication through Kerberos service. To create a credential of type
-<a href="/mongo-java-driver/3.11/javadoc/core/authentication/#kerberos-authentication.html
+<a href="http://docs.mongodb.org/manual/core/authentication/#kerberos-authentication
 ">Kerberos (GSSAPI)</a>, use the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createGSSAPICredential-java.lang.String-
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createGSSAPICredential(java.lang.String)
 "><code>createGSSAPICredential</code></a>
 static factory method:</p>
 
@@ -574,7 +756,7 @@ MongoCredential credential = MongoCredential.createGSSAPICredential(user);
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -582,7 +764,12 @@ MongoCredential credential = MongoCredential.createGSSAPICredential(user);
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=GSSAPI</code>. Using the new MongoClient API:</p>
@@ -592,7 +779,7 @@ MongoCredential credential = MongoCredential.createGSSAPICredential(user);
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://username%40REALM.ME@host1/?authMechanism=GSSAPI&quot;);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://username%40REALM.ME@host1/?authMechanism=GSSAPI&quot;);
 </code></pre>
 
 <div class="admonition note">
@@ -612,20 +799,20 @@ Java libraries can acquire a Kerberos ticket:</p>
 java.security.krb5.kdc=mykdc.myrealm.me
 </code></pre>
 
-<p>Depending on the Kerberos setup, additional property specifications may be required, either via the application code or, in some cases, the <a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#withMechanismProperty-java.lang.String-T-
+<p>Depending on the Kerberos setup, additional property specifications may be required, either via the application code or, in some cases, the <a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#withMechanismProperty(java.lang.String,T)
 ">withMechanismProperty()</a> method of the <code>MongoCredential</code> instance:</p>
 
 <ul>
-<li><p><strong><a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#SERVICE_NAME_KEY
+<li><p><strong><a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#SERVICE_NAME_KEY
 "><code>SERVICE_NAME</code></a></strong></p></li>
 
-<li><p><strong><a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#CANONICALIZE_HOST_NAME_KEY
+<li><p><strong><a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#CANONICALIZE_HOST_NAME_KEY
 "><code>CANONICALIZE_HOST_NAME</code></a></strong></p></li>
 
-<li><p><strong><a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#JAVA_SUBJECT_KEY
+<li><p><strong><a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#JAVA_SUBJECT_KEY
 "><code>JAVA_SUBJECT</code></a></strong></p></li>
 
-<li><p><strong><a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#JAVA_SASL_CLIENT_PROPERTIES_KEY
+<li><p><strong><a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#JAVA_SASL_CLIENT_PROPERTIES_KEY
 "><code>JAVA_SASL_CLIENT_PROPERTIES</code></a></strong></p></li>
 </ul>
 
@@ -648,7 +835,7 @@ interoperability with Windows Active Directory and in particular the ability to 
 <ul>
 <li><a href="https://bugs.openjdk.java.net/browse/JDK-8054026">JDK-8054026</a></li>
 <li><a href="https://bugs.openjdk.java.net/browse/JDK-6722928">JDK-6722928</a></li>
-<li><a href="https://stackoverflow.com/questions/23427343/cannot-retrieve-tgt-despite-allowtgtsessionkey-registry-entry">SO 23427343</a><br /></li>
+<li><a href="https://stackoverflow.com/questions/23427343/cannot-retrieve-tgt-despite-allowtgtsessionkey-registry-entry">SO 23427343</a></li>
 </ul>
 
 </div>
@@ -656,9 +843,10 @@ interoperability with Windows Active Directory and in particular the ability to 
 
 <h2 id="ldap-plain">LDAP (PLAIN)</h2>
 
-<p><a href="http://www.mongodb.com/products/mongodb-enterprise">MongoDB Enterprise</a> supports proxy authentication through a Lightweight Directory Access Protocol (LDAP) service. To create a credential of type <a href="/mongo-java-driver/3.11/javadoc/core/authentication/#ldap-proxy-authority-authentication.html
+<p><a href="http://www.mongodb.com/products/mongodb-enterprise">MongoDB Enterprise</a> supports proxy authentication through a Lightweight Directory
+Access Protocol (LDAP) service. To create a credential of type <a href="http://docs.mongodb.org/manual/core/authentication/#ldap-proxy-authority-authentication
 ">LDAP</a> use the
-<a href="/mongo-java-driver/3.11/javadoc/com/mongodb/MongoCredential.html#createPlainCredential-java.lang.String-java.lang.String-char:A-
+<a href="/mongo-java-driver/3.11/apidocs/mongodb-driver-core/com/mongodb/MongoCredential.html#createPlainCredential(java.lang.String,java.lang.String,char[])
 "><code>createPlainCredential</code></a> static factory method:</p>
 
 <pre><code class="language-java">String user;          // The LDAP user name
@@ -671,7 +859,7 @@ MongoCredential credential = MongoCredential.createPlainCredential(user, &quot;$
 
 <pre><code class="language-java">MongoClient mongoClient = MongoClients.create(
         MongoClientSettings.builder()
-                .applyToClusterSettings(builder -&gt; 
+                .applyToClusterSettings(builder -&gt;
                         builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
                 .credential(credential)
                 .build());
@@ -679,7 +867,12 @@ MongoCredential credential = MongoCredential.createPlainCredential(user, &quot;$
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient(new ServerAddress(&quot;host1&quot;, 27017), credential);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(
+        MongoClientSettings.builder()
+                .applyToClusterSettings(builder -&gt;
+                        builder.hosts(Arrays.asList(new ServerAddress(&quot;host1&quot;, 27017))))
+                .credential(credential)
+                .build());
 </code></pre>
 
 <p>Or use a connection string that explicitly specifies the <code>authMechanism=PLAIN</code>.  Using the new MongoClient API:</p>
@@ -689,7 +882,7 @@ MongoCredential credential = MongoCredential.createPlainCredential(user, &quot;$
 
 <p>or using the legacy MongoClient API:</p>
 
-<pre><code class="language-java">MongoClientURI uri = new MongoClientURI(&quot;mongodb://user1@host1/?authSource=$external&amp;authMechanism=PLAIN&quot;);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://user1@host1/?authSource=$external&amp;authMechanism=PLAIN&quot;);
 </code></pre>
 
 <div class="admonition note">
@@ -724,6 +917,16 @@ of <code>LDAP</code> because technically the driver authenticates via the
 </ul></li>
 <li><a href="#mongodb-cr">MONGODB-CR</a></li>
 <li><a href="#x-509">X.509</a></li>
+<li><a href="#mongodb-aws">MONGODB-AWS</a>
+<ul>
+<li><a href="#connection-string">Connection String</a></li>
+<li><a href="#mongocredential-1">MongoCredential</a>
+<ul>
+<li><a href="#specify-your-aws-session-token-in-a-connection-string">Specify your AWS Session Token in a Connection String</a></li>
+<li><a href="#specify-your-aws-session-token-in-a-mongocredential">Specify your AWS Session Token in a MongoCredential</a></li>
+<li><a href="#specify-your-aws-session-token-in-an-environment-variable">Specify your AWS Session Token in an Environment Variable</a></li>
+</ul></li>
+</ul></li>
 <li><a href="#gssapi">Kerberos (GSSAPI)</a></li>
 <li><a href="#ldap-plain">LDAP (PLAIN)</a></li>
 </ul></li>
@@ -752,30 +955,31 @@ of <code>LDAP</code> because technically the driver authenticates via the
 <script type="text/javascript" src="/mongo-java-driver/3.11/js/navbar.js"></script>
 <script type="text/javascript" src="/mongo-java-driver/3.11/lib/highlight/highlight.pack.js"></script>
 <script type="text/javascript" src="/mongo-java-driver/3.11/js/scripts.js"></script>
+<script type="text/javascript" src="/mongo-java-driver/3.11/lib/delighted.js"></script>
 <script type="text/javascript" src="/mongo-java-driver/3.11/lib/bootstrap-toggle/bootstrap-toggle.min.js"></script>
 <script type="text/javascript" src="/mongo-java-driver/3.11/js/java.js"></script>
 
 
-<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-K75Z5Q"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id=UA-7301842-14"
+                  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push(
-{'gtm.start': new Date().getTime(),event:'gtm.js'}
-);var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-K75Z5Q');</script>
+   {'gtm.start': new Date().getTime(),event:'gtm.js'}
+ );var f=d.getElementsByTagName(s)[0],
+       j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+         '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','UA-7301842-14');</script>
 
 
 <script type="text/javascript">
-var _elqQ = _elqQ || [];
-_elqQ.push(['elqSetSiteId', '413370795']);
-_elqQ.push(['elqTrackPageView']);
-(function () {
-function async_load()
-{ var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '//img03.en25.com/i/elqCfg.min.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x); }
-if (window.addEventListener) window.addEventListener('DOMContentLoaded', async_load, false);
-else if (window.attachEvent) window.attachEvent('onload', async_load);
-})();
+ var _elqQ = _elqQ || [];
+ _elqQ.push(['elqSetSiteId', '413370795']);
+ _elqQ.push(['elqTrackPageView']);
+ (function () {
+   function async_load()
+   { var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '//img03.en25.com/i/elqCfg.min.js'; var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x); }
+   if (window.addEventListener) window.addEventListener('DOMContentLoaded', async_load, false);
+   else if (window.attachEvent) window.attachEvent('onload', async_load);
+ })();
 </script>
 </body>
 </html>

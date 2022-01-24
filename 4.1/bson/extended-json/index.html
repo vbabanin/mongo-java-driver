@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:09.11">
+<meta name="date" content="2022-01-24T15:54:53.09">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>Extended JSON</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,7 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/bson/extended-json.md" target="_blank" title="Edit bson/extended-json.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/bson/">BSON</a> <i class="fa fa-angle-right"></i></li><li>Extended JSON</li>
 </ul>
@@ -424,6 +426,35 @@ try {
 
 <p>The <code>Document.parse()</code> static factory method constructs an instance of a <code>JsonReader</code> with the given string and returns an instance of an
 equivalent Document. <code>JsonReader</code> automatically detects the JSON flavor in the string, so you do not need to specify it.</p>
+
+<h3 id="reading-and-writing-json-directly">Reading and Writing JSON Directly</h3>
+
+<p>If you do not need a document and only want to deal with JSON, you can use <code>JsonObject</code> to read and write JSON directly. <code>JsonObject</code>
+is simply a wrapper class that takes in a <code>String</code> in the constructor and returns the <code>String</code> in the <code>getJson()</code> method.
+Reading and writing JSON directly is more efficient than constructing a <code>Document</code> first and then calling <code>toJson()</code>, and it is also more efficient than calling <code>Document#parse</code>.
+The codec responsible for reading/writing JSON (<code>JsonObjectCodec</code>) is part of the default registry, so doing this is very simple
+and demonstrated by the following example:</p>
+
+<pre><code class="language-java">MongoDatabase database = mongoClient.getDatabase(&quot;mydb&quot;);
+MongoCollection&lt;JsonObject&gt; collection = database.getCollection(&quot;json&quot;, JsonObject.class);
+collection.insertOne(new JsonObject(&quot;{hello: 1}&quot;));
+JsonObject jsonObject = collection.find().first();
+</code></pre>
+
+<h3 id="reading-and-writing-json-with-customsettings">Reading and Writing JSON with CustomSettings</h3>
+
+<p>You can also provide custom <code>JsonWriterSettings</code> to the <code>JsonObjectCodec</code>, by constructing the codec yourself and then creating your own registry:</p>
+
+<pre><code class="language-java">CodecRegistry codecRegistry = fromRegistries(fromCodecs(
+        new JsonObjectCodec(JsonWriterSettings
+                .builder()
+                .outputMode(JsonMode.EXTENDED)
+                .build())),
+        getDefaultCodecRegistry());
+MongoDatabase database = mongoClient.getDatabase(&quot;mydb&quot;).withCodecRegistry(codecRegistry);
+MongoCollection&lt;JsonObject&gt; collection = database.getCollection(&quot;json&quot;, JsonObject.class);
+collection.insertOne(new JsonObject(&quot;{hello: 1}&quot;));
+</code></pre>
 <div id="btnv"><div class="pull-left">
   <a class="navigation prev" href="/mongo-java-driver/4.1/bson/pojos/">
       <i class="fa fa-long-arrow-left"> </i> POJOs
@@ -445,6 +476,8 @@ equivalent Document. <code>JsonReader</code> automatically detects the JSON flav
 <li><a href="#customizing-the-output">Customizing the output</a></li>
 </ul></li>
 <li><a href="#reading-json">Reading JSON</a></li>
+<li><a href="#reading-and-writing-json-directly">Reading and Writing JSON Directly</a></li>
+<li><a href="#reading-and-writing-json-with-customsettings">Reading and Writing JSON with CustomSettings</a></li>
 </ul></li>
 </ul></li>
 </ul>

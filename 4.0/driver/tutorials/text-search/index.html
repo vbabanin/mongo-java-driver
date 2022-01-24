@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:02:27.67">
+<meta name="date" content="2022-01-24T15:54:52">
 <link rel="shortcut icon" href="/mongo-java-driver/4.0/img/favicon.png">
 
     <title>Text Search</title><link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.0/../">
-        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/tutorials/text-search.md" target="_blank" title="Edit driver/tutorials/text-search.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.0/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li><a href="/mongo-java-driver/4.0/driver/tutorials/">Tutorials</a> <i class="fa fa-angle-right"></i></li><li>Text Search</li>
 </ul>
@@ -318,9 +323,14 @@
 
 <h2 id="text-search">Text Search</h2>
 
-<p>MongoDB supports query operations that perform a <a href="http://docs.mongodb.org/manual/text-search
-">text search</a> of string content. To perform text search, MongoDB uses a <a href="http://docs.mongodb.org/manual/core/index-text
-">text index</a> and the <a href="http://docs.mongodb.org/manual/reference/operator/query/text
+<p><a href="https://docs.atlas.mongodb.com/atlas-search">Atlas Search</a> makes it easy to build fast, relevance-based search capabilities on top of your
+MongoDB data. Try it today on <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>, our fully managed database as a service.</p>
+
+<p>Alternatively, MongoDB supports simpler query operations that perform a <a href="http://docs.mongodb.org/manual/text-search
+">text search</a> of string content. To
+perform text search, MongoDB uses a <a href="http://docs.mongodb.org/manual/core/index-text
+">text index</a> and the
+<a href="http://docs.mongodb.org/manual/reference/operator/query/text
 "><code>$text</code> query operator</a>.</p>
 
 <p>The Java driver provides the <a href="/mongo-java-driver/4.0/apidocs/mongodb-driver-core/com/mongodb/client/model/Filters.html#text(java.lang.String,com.mongodb.client.model.TextSearchOptions)
@@ -333,8 +343,7 @@
 
 <li><p>Include the following import statements:</p>
 
-<pre><code class="language-java"> import com.mongodb.Block;
- import com.mongodb.client.MongoClients;
+<pre><code class="language-java"> import com.mongodb.client.MongoClients;
  import com.mongodb.client.MongoClient;
  import com.mongodb.client.MongoCollection;
  import com.mongodb.client.MongoDatabase;
@@ -345,16 +354,6 @@
  import com.mongodb.client.model.TextSearchOptions;
  import com.mongodb.client.model.Projections;
  import org.bson.Document;
-</code></pre></li>
-
-<li><p>Include the following code which the examples in the tutorials will use to print the results of the text search:</p>
-
-<pre><code class="language-java"> Block&lt;Document&gt; printBlock = new Block&lt;Document&gt;() {
-        @Override
-        public void apply(final Document document) {
-            System.out.println(document.toJson());
-        }
-    };
 </code></pre></li>
 </ul>
 
@@ -409,7 +408,8 @@ System.out.println(&quot;Text search matches: &quot; + matchCount);
 
 <pre><code class="language-java">collection.find(Filters.text(&quot;bakery cafe&quot;))
                        .projection(Projections.metaTextScore(&quot;score&quot;))
-                       .sort(Sorts.metaTextScore(&quot;score&quot;)).forEach(printBlock);
+                       .sort(Sorts.metaTextScore(&quot;score&quot;))
+                       .forEach(doc -&gt; System.out.println(doc.toJson()));
 </code></pre>
 
 <h3 id="specify-a-text-search-option">Specify a Text Search Option</h3>

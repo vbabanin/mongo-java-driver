@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-04-06T12:12:05.85">
+<meta name="date" content="2022-01-24T15:54:54.14">
 <link rel="shortcut icon" href="/mongo-java-driver/4.2/img/favicon.png">
 
     <title>Upgrade Considerations</title><link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.2/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.2/../">
-        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.2/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,13 +312,16 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/upgrading.md" target="_blank" title="Edit upgrading.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li>Upgrade Considerations</li>
 </ul>
 </div>
+
+<h1 id="upgrading-to-the-4-3-driver">Upgrading to the 4.3 Driver</h1>
+
+<p>The 4.3 release is a minor release as per the definition of <a href="https://semver.org">semantic versioning</a>. As such, there are no breaking
+changes in this release for users upgrading from the 4.2 release.</p>
 
 <h1 id="upgrading-to-the-4-2-driver">Upgrading to the 4.2 Driver</h1>
 
@@ -418,6 +425,17 @@ Please note that <code>onNext</code> will not be called just <code>onComplete</c
 </thead>
 
 <tbody>
+<tr>
+<td>Version 4.3</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓</td>
+</tr>
+
 <tr>
 <td>Version 4.2</td>
 <td>✓</td>
@@ -613,6 +631,7 @@ Please note that <code>onNext</code> will not be called just <code>onComplete</c
 <div class="wrapper"><div class="toc">
     <span class="toc-header">On this page</span><nav id="TableOfContents">
 <ul>
+<li><a href="#upgrading-to-the-4-3-driver">Upgrading to the 4.3 Driver</a></li>
 <li><a href="#upgrading-to-the-4-2-driver">Upgrading to the 4.2 Driver</a></li>
 <li><a href="#upgrading-to-the-4-1-driver">Upgrading to the 4.1 Driver</a></li>
 <li><a href="#upgrading-to-the-4-0-driver">Upgrading to the 4.0 Driver</a>

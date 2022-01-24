@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:02:27.61">
+<meta name="date" content="2022-01-24T15:54:51.92">
 <link rel="shortcut icon" href="/mongo-java-driver/4.0/img/favicon.png">
 
     <title>Quick Start - POJOs</title><link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.0/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.0/../">
-        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.0/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/getting-started/quick-start-pojo.md" target="_blank" title="Edit driver/getting-started/quick-start-pojo.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.0/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li>Quick Start - POJOs</li>
 </ul>
@@ -340,9 +345,8 @@ that can be found with the driver source on github.</p>
 <li><p>The following import statements:</p></li>
 </ul>
 
-<pre><code class="language-java">import com.mongodb.Block;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+<pre><code class="language-java">import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.DeleteResult;
@@ -448,7 +452,7 @@ public final class Address {
 
 <h2 id="creating-a-custom-codecregistry">Creating a Custom CodecRegistry</h2>
 
-<p>Before you can use a POJO with the driver, you need to configure the <a href="/mongo-java-driver/4.0/bson/codecs/"><code>CodecRegistry</code> </a> to include a codecs
+<p>Before you can use a POJO with the driver, you need to configure the <a href="/mongo-java-driver/4.0/bson/codecs/"><code>CodecRegistry</code></a> to include a codecs
 to handle the translation to and from <a href="/mongo-java-driver/4.0/bson/"><code>bson</code></a> for your POJOs. The simplest way to do that is to use the
 <a href="/mongo-java-driver/4.0/apidocs/bson/org/bson/codecs/pojo/PojoCodecProvider.html
 "><code>PojoCodecProvider.builder()</code></a> to create and configure a <code>CodecProvider</code>.</p>
@@ -540,19 +544,10 @@ collection.insertMany(people);
 
 <p>The following example prints all the Person instances in the collection:</p>
 
-<pre><code class="language-java">Block&lt;Person&gt; printBlock = new Block&lt;Person&gt;() {
-    @Override
-    public void apply(final Person person) {
-        System.out.println(person);
-    }
-};
-
-collection.find().forEach(printBlock);
+<pre><code class="language-java">collection.find().forEach(System.out::println);
 </code></pre>
 
-<p>The example uses the <a href="/mongo-java-driver/4.0/apidocs/mongodb-driver-sync/com/mongodb/client/MongoIterable.html#forEach(com.mongodb.Block)
-"><code>forEach</code></a> method on the <code>FindIterable</code>
-object to apply a block to each Person and outputs the following:</p>
+<p>The example outputs the following:</p>
 
 <pre><code class="language-bash">Person{id='591dbc2550852fa685b3ad17', name='Ada Byron', age=20, address=Address{street='St James Square', city='London', zip='W1'}}
 Person{id='591dbc2550852fa685b3ad18', name='Charles Babbage', age=45, address=Address{street='5 Devonshire Street', city='London', zip='W11'}}
@@ -595,7 +590,7 @@ System.out.println(somebody);
 
 <p>The following example returns and prints everyone where <code>&quot;age&quot; &gt; 30</code>:</p>
 
-<pre><code class="language-java">collection.find(gt(&quot;age&quot;, 30)).forEach(printBlock);
+<pre><code class="language-java">collection.find(gt(&quot;age&quot;, 30)).forEach(System.out::println);
 </code></pre>
 
 <h2 id="update-documents">Update Documents</h2>

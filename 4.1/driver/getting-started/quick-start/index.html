@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:09.21">
+<meta name="date" content="2022-01-24T15:54:53.21">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>Quick Start</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,9 +312,10 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
-<div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">You are currently viewing an older version of the Java driver documentation.<br>For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync">MongoDB Java Driver documentation site</a>.</div>
- 
+                  <div class="body"><div style="padding: 15px; margin: 20px 0px; border-width: 1px 1px 1px 0px; border-style: solid; border-radius: 6px; font-size: 14px; line-height: 20px; color: rgb(17, 97, 73); border-color: rgb(195, 231, 202) rgb(195, 231, 202) rgb(195, 231, 202) rgb(19, 170, 82); background-color: rgb(228, 244, 228);">
+                      You are currently viewing an older version of the Java driver documentation.<br>
+                      For the most recent version of the reference documentation, see our <a style="font-weight: bold" href="https://docs.mongodb.com/drivers/java/sync/">MongoDB Java Driver documentation site</a>.
+                    </div> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver/getting-started/quick-start.md" target="_blank" title="Edit driver/getting-started/quick-start.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/driver/">Java Driver</a> <i class="fa fa-angle-right"></i></li><li>Quick Start</li>
 </ul>
@@ -346,7 +351,7 @@ import com.mongodb.client.MongoClient;
 <p>Legacy MongoClient API:</p>
 
 <pre><code class="language-java">import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
 </code></pre>
 
 <p>And the common elements between the legacy and new APIs:</p>
@@ -358,7 +363,6 @@ import com.mongodb.client.MongoCollection;
 
 import org.bson.Document;
 import java.util.Arrays;
-import com.mongodb.Block;
 
 import com.mongodb.client.MongoCursor;
 import static com.mongodb.client.model.Filters.*;
@@ -452,24 +456,14 @@ to make a connection to a running MongoDB instance.</p>
 <li>You can explicitly specify the hostname to connect to a MongoDB instance running on the specified host on port <code>27017</code>:</li>
 </ul>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient( &quot;hostOne&quot; );
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://hostOne&quot;);
 </code></pre>
 
 <ul>
-<li>You can explicitly specify the hostname and the port:</li>
+<li>You can explicitly specify the hostname and port:</li>
 </ul>
 
-<pre><code class="language-java">MongoClient mongoClient = new MongoClient( &quot;hostOne&quot; , 27018 );
-</code></pre>
-
-<ul>
-<li>You can specify the
-<a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/MongoClientURI.html
-"><code>MongoClientURI</code></a> connection string:</li>
-</ul>
-
-<pre><code class="language-java"> MongoClientURI connectionString = new MongoClientURI(&quot;mongodb://hostOne:27017,hostTwo:27017&quot;);
- MongoClient mongoClient = new MongoClient(connectionString);
+<pre><code class="language-java">MongoClient mongoClient = new MongoClient(&quot;mongodb://hostOne:27018&quot;);
 </code></pre>
 
 <p>The connection string mostly follows <a href="http://tools.ietf.org/html/rfc3986">RFC 3986</a>, with the exception of the domain name. For MongoDB,
@@ -479,7 +473,7 @@ it is possible to list multiple domain names separated by a comma. For more info
 
 <h2 id="access-a-database">Access a Database</h2>
 
-<p>Once you have a <code>MongoClient</code> instance connected to a MongoDB deployment, use the <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/MongoClient.html#getDatabase(java.lang.String)
+<p>Once you have a <code>MongoClient</code> instance connected to a MongoDB deployment, use the <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/MongoClient.html#getDatabase(java.lang.String)
 "><code>MongoClient.getDatabase()</code></a> method to access a database.</p>
 
 <p>Specify the name of the database to the <code>getDatabase()</code> method. If a database does not exist, MongoDB creates the database when you first store data for that database.</p>
@@ -705,23 +699,15 @@ System.out.println(myDoc.toJson());
 
 <p>The following example returns and prints all documents where <code>&quot;i&quot; &gt; 50</code>:</p>
 
-<pre><code class="language-java">Block&lt;Document&gt; printBlock = new Block&lt;Document&gt;() {
-     @Override
-     public void apply(final Document document) {
-         System.out.println(document.toJson());
-     }
-};
-
-collection.find(gt(&quot;i&quot;, 50)).forEach(printBlock);
+<pre><code class="language-java">collection.find(gt(&quot;i&quot;, 50))
+        .forEach(doc -&gt; System.out.println(doc.toJson()));
 </code></pre>
-
-<p>The example uses the <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-sync/com/mongodb/client/MongoIterable.html#forEach(com.mongodb.Block)
-"><code>forEach</code></a> method on the <code>FindIterable</code> object to apply a block to each document.</p>
 
 <p>To specify a filter for a range, such as <code>50 &lt; i &lt;= 100</code>, you can use the <a href="/mongo-java-driver/4.1/apidocs/mongodb-driver-core/com/mongodb/client/model/Filters.html#and(org.bson.conversions.Bson...)
 "><code>and</code></a> helper:</p>
 
-<pre><code class="language-java">collection.find(and(gt(&quot;i&quot;, 50), lte(&quot;i&quot;, 100))).forEach(printBlock);
+<pre><code class="language-java">collection.find(and(gt(&quot;i&quot;, 50), lte(&quot;i&quot;, 100)))
+        .forEach(doc -&gt; System.out.println(doc.toJson()));
 </code></pre>
 
 <h2 id="update-documents">Update Documents</h2>

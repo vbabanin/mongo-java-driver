@@ -5,7 +5,7 @@
 <meta name="description" content="MongoDB Java Driver documentation">
 <meta name="author" content="MongoDB Drivers Team">
 <meta name="keyword" content="MongoDB, Java, JVM, NoSQL, Document Database">
-<meta name="date" content="2021-02-19T13:00:08.95">
+<meta name="date" content="2022-01-24T15:54:52.85">
 <link rel="shortcut icon" href="/mongo-java-driver/4.1/img/favicon.png">
 
     <title>Quick Start - POJOs</title><link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap.css" type="text/css" />
@@ -15,6 +15,10 @@
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/highlight/styles/idea.css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/lib/bootstrap-toggle/bootstrap-toggle.min.css" type="text/css" />
 <link rel="stylesheet" href="/mongo-java-driver/4.1/css/java.css" type="text/css" />
+
+
+
+
 
 </head>
 
@@ -30,7 +34,7 @@
     
     <div class="logo pull-left">
       <a href="/mongo-java-driver/4.1/../">
-        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB.org" />
+        <img src="/mongo-java-driver/4.1/img/logo-mongodb-header.png", alt="MongoDB" />
       </a>
     </div>
     
@@ -308,8 +312,7 @@
             <div class="document">
               <div class="documentwrapper">
                 <div class="bodywrapper">
-                  <div class="body">
- 
+                  <div class="body"> 
 <a class="edit-link" href="https://github.com/mongodb/mongo-java-driver/blob/master/docs/reference/content/driver-reactive/getting-started/quick-start-pojo.md" target="_blank" title="Edit driver-reactive/getting-started/quick-start-pojo.md on GitHub"><i class="fa fa-pencil-square-o"></i></a><div class="bc">
 <ul><li><a href="/mongo-java-driver/4.1/driver-reactive/">Reactive Streams</a> <i class="fa fa-angle-right"></i></li><li>Quick Start - POJOs</li>
 </ul>
@@ -456,7 +459,7 @@ public final class Address {
 
 <h2 id="creating-a-custom-codecregistry">Creating a Custom CodecRegistry</h2>
 
-<p>Before you can use a POJO with the driver, you need to configure the <a href="/mongo-java-driver/4.1/bson/codecs/"><code>CodecRegistry</code> </a> to include a codecs
+<p>Before you can use a POJO with the driver, you need to configure the <a href="/mongo-java-driver/4.1/bson/codecs/"><code>CodecRegistry</code></a> to include a codecs
 to handle the translation to and from <a href="/mongo-java-driver/4.1/bson/"><code>bson</code></a> for your POJOs. The simplest way to do that is to use the
 <a href="/mongo-java-driver/4.1/apidocs/bson/org/bson/codecs/pojo/PojoCodecProvider.html
 "><code>PojoCodecProvider.builder()</code></a> to create and configure a <code>CodecProvider</code>.</p>
