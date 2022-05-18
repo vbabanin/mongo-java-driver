@@ -754,7 +754,7 @@ class MongoClientOptionsSpecification extends Specification {
                         'compressorList', 'connectTimeout', 'connectionPoolListeners', 'cursorFinalizerEnabled', 'dbDecoderFactory',
                         'dbEncoderFactory', 'heartbeatConnectTimeout', 'heartbeatFrequency', 'heartbeatSocketTimeout', 'localThreshold',
                         'maxConnectionIdleTime', 'maxConnectionLifeTime', 'maxConnectionsPerHost', 'maxConnecting',
-                        'maxWaitTime', 'minConnectionsPerHost',
+                        'maintenanceInitialDelay', 'maintenanceFrequency', 'maxWaitTime', 'minConnectionsPerHost',
                         'minHeartbeatFrequency', 'readConcern', 'readPreference', 'requiredReplicaSetName', 'retryReads', 'retryWrites',
                         'serverApi', 'serverListeners', 'serverMonitorListeners', 'serverSelectionTimeout', 'serverSelector',
                         'socketTimeout', 'sslContext', 'sslEnabled', 'sslInvalidHostNameAllowed',
