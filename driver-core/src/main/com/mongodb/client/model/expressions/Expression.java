@@ -17,6 +17,11 @@
 package com.mongodb.client.model.expressions;
 
 import com.mongodb.annotations.Evolving;
+import com.mongodb.lang.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * Expressions express values that may be represented in (or computations that
@@ -97,4 +102,109 @@ public interface Expression {
      * @return true if less than or equal to, false otherwise
      */
     BooleanExpression lte(Expression lte);
+
+
+    /**
+     * Applies the given function to this argument. Note that "apply" usually
+     * applies functions to arguments; here, the parameters are reversed.
+     *
+     * @param f
+     * @return
+     * @param <T>
+     * @param <R>
+     */
+    <T extends Expression, R extends Expression> R apply(Function<T, R> f);
+
+    <T0 extends Expression, R0 extends Expression> R0 switchMap(
+            Function<SwitchInitial<T0>, SwitchComplete<T0, R0>> switchMap);
+
+    class SwitchComplete<T extends Expression, R extends Expression> {
+
+        protected final T value;
+        protected final List<SwitchCase<R>> branches;
+
+        protected final R defaults;
+
+        SwitchComplete(final T value, final List<SwitchCase<R>> branches, @Nullable final R defaults) {
+            this.value = value;
+            this.branches = branches;
+            this.defaults = defaults;
+        }
+
+        protected SwitchComplete<T, R> withDefault(final R defaults) {
+            return new SwitchComplete<>(value, branches, defaults);
+        }
+
+        static class SwitchCase<R extends Expression> {
+            final BooleanExpression caseEx;
+            final R thenEx;
+            SwitchCase(final BooleanExpression caseEx, final R thenEx) {
+                this.caseEx = caseEx;
+                this.thenEx = thenEx;
+            }
+        }
+    }
+
+    class SwitchInitial<T extends Expression> {
+        private final T value;
+
+        public SwitchInitial(final T value) {
+            this.value = value;
+        }
+
+        private <R extends Expression> SwitchPartial<T, R> with(final SwitchComplete.SwitchCase<R> switchCase) {
+            List<SwitchComplete.SwitchCase<R>> v = new ArrayList<>();
+            v.add(switchCase);
+            return new SwitchPartial<>(this.value, v);
+        }
+
+        public <R extends Expression> SwitchPartial<T, R> caseEq(final T v, final R r) {
+            return this.with(new SwitchComplete.SwitchCase<>(this.value.eq(v), r));
+        }
+
+        public <R extends Expression> SwitchPartial<T, R> caseLt(final T v, final R r) {
+            return this.with(new SwitchComplete.SwitchCase<>(this.value.lt(v), r));
+        }
+
+        public <R extends Expression> SwitchPartial<T, R> caseLte(final T v, final R r) {
+            return this.with(new SwitchComplete.SwitchCase<>(this.value.lte(v), r));
+        }
+
+        public <R extends Expression> SwitchPartial<T, R> caseIs(final Function<T, BooleanExpression> o, final R r) {
+            return this.with(new SwitchComplete.SwitchCase<>(o.apply(this.value), r));
+        }
+    }
+
+    class SwitchPartial<T extends Expression, R extends Expression> extends SwitchComplete<T, R> {
+        public SwitchPartial(final T value, final List<SwitchCase<R>> branches) {
+            super(value, branches, null);
+        }
+
+        private SwitchPartial<T, R> with(final SwitchCase<R> switchCase) {
+            List<SwitchCase<R>> v = new ArrayList<>(this.branches);
+            v.add(switchCase);
+            return new SwitchPartial<>(this.value, v);
+        }
+
+        public SwitchPartial<T, R> caseEq(final T v, final R r) {
+            return this.with(new SwitchCase<>(this.value.eq(v), r));
+        }
+
+        public SwitchPartial<T, R> caseLt(final T v, final R r) {
+            return this.with(new SwitchCase<>(this.value.lt(v), r));
+        }
+
+        public SwitchPartial<T, R> caseLte(final T v, final R r) {
+            return this.with(new SwitchCase<>(this.value.lte(v), r));
+        }
+
+        public SwitchPartial<T, R> caseIs(final Function<T, BooleanExpression> o, final R r) {
+            return this.with(new SwitchCase<>(o.apply(this.value), r));
+        }
+
+        public SwitchComplete<T, R> defaults(final R else0) {
+            return this.withDefault(else0);
+        }
+
+    }
 }

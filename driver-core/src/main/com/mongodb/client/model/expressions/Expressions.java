@@ -199,7 +199,9 @@ public final class Expressions {
                 document.toBsonDocument(BsonDocument.class, cr))));
     }
 
-    public static <R extends Expression> R ofNull() {
+    public static Expression ofNull() {
+        // There is no specific expression type corresponding to Null,
+        // and Null is not a value in any other expression type.
         return new MqlExpression<>((cr) -> new AstPlaceholder(new BsonNull()))
                 .assertImplementsAllExpressions();
     }

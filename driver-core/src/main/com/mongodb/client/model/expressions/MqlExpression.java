@@ -132,6 +132,11 @@ final class MqlExpression<T extends Expression>
     /** @see Expression */
 
     @Override
+    public <Q extends Expression, R extends Expression> R apply(final Function<Q, R> f) {
+        return f.apply(this.assertImplementsAllExpressions());
+    }
+
+    @Override
     public BooleanExpression eq(final Expression eq) {
         return new MqlExpression<>(ast("$eq", eq));
     }
@@ -159,6 +164,27 @@ final class MqlExpression<T extends Expression>
     @Override
     public BooleanExpression lte(final Expression lte) {
         return new MqlExpression<>(ast("$lte", lte));
+    }
+
+
+    @Override
+    public <T0 extends Expression, R0 extends Expression> R0 switchMap(
+            final Function<SwitchInitial<T0>, SwitchComplete<T0, R0>> switchMap) {
+        SwitchInitial<T0> on = new SwitchInitial<>(this.assertImplementsAllExpressions());
+        SwitchComplete<T0, R0> construct = switchMap.apply(on);
+        return newMqlExpression((cr) -> {
+            BsonArray branches = new BsonArray();
+            for (SwitchComplete.SwitchCase<R0> v : construct.branches) {
+                branches.add(new BsonDocument()
+                        .append("case", extractBsonValue(cr, v.caseEx))
+                        .append("then", extractBsonValue(cr, v.thenEx)));
+            }
+            BsonDocument switchBson = new BsonDocument().append("branches", branches);
+            if (construct.defaults != null) {
+                switchBson = switchBson.append("default", extractBsonValue(cr, construct.defaults));
+            }
+            return astDoc("$switch", switchBson);
+        });
     }
 
     /** @see ArrayExpression */
