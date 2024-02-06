@@ -101,7 +101,8 @@ import static java.util.Arrays.asList;
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 /*
-        aws_secret_access_key: AKIAIOSFODNN7ADFMKP
+        AWS_SECRET_ACCESS_KEY: TESTAKIAIOSFODNN7ADFMKP
+        password: 123
  */
 @NotThreadSafe
 public class InternalStreamConnection implements InternalConnection {
