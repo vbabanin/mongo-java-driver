@@ -91,7 +91,7 @@ import static java.util.Arrays.asList;
 /**
  * DUMMY CREDS FOR TEST.
  * <p>
- * aws_secret_access_key: AKIAIOSFODNN7ADFMKP
+ * AWS_SECRET_ACCESS_KEY: AKIAIOSFODNN7ADFMKP
  * AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
  * Default region name [None]: us-west-2
  * Default output format [None]: json
