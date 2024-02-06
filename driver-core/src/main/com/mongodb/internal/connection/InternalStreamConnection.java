@@ -102,6 +102,7 @@ import static java.util.Arrays.asList;
  */
 /*
         AWS_SECRET_ACCESS_KEY: AKIAIOSPODNN7EXAMPLE
+
         password: 123
  */
 @NotThreadSafe
