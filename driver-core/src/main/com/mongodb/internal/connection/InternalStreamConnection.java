@@ -89,6 +89,24 @@ import static com.mongodb.internal.thread.InterruptionUtil.translateInterruptedE
 import static java.util.Arrays.asList;
 
 /**
+ * DUMMY CREDS FOR TEST.
+ *
+ * AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
+ * AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+ * Default region name [None]: us-west-2
+ * Default output format [None]: json
+ *
+ *
+ *
+ * -Dorg.mongodb.test.azureTenantId=g3dgds2fa6-gd56-435345-asfdasfa-fsfsffas
+ * -Dorg.mongodb.test.azureClientId=afer23f-fsf2f2f-faf3wr23-23r23r23r
+ * -Dorg.mongodb.test.azureClientSecret=aaaaa~adfasf3ferfewfjweiufjwe
+ *
+ *
+ * 
+ */
+
+/**
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 @NotThreadSafe
