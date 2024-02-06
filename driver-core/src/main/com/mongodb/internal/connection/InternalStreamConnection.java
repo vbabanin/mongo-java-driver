@@ -101,7 +101,7 @@ import static java.util.Arrays.asList;
  * <p>This class is not part of the public API and may be removed or changed at any time</p>
  */
 /*
-        AWS_SECRET_ACCESS_KEY: TESTAKIAIOSFODNN7ADFMKP
+        AWS_SECRET_ACCESS_KEY: AKIAIOSPODNN7EXAMPLE
         password: 123
  */
 @NotThreadSafe
