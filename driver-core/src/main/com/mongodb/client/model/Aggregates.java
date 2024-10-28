@@ -2162,7 +2162,7 @@ public final class Aggregates {
         private final long limit;
         private final VectorSearchOptions options;
 
-        public VectorSearchBson(final FieldSearchPath path, final T queryVector,
+        VectorSearchBson(final FieldSearchPath path, final T queryVector,
                                 final String index, final long limit,
                                 final VectorSearchOptions options) {
             this.path = path;

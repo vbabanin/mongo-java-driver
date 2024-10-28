@@ -1,3 +1,19 @@
+/*
+ * Copyright 2008-present MongoDB, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.mongodb.client.model.search;
 
 import com.mongodb.MongoNamespace;
@@ -44,6 +60,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -200,9 +217,9 @@ class AggregatesVectorSearchIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("provideSupportedVectors")
-    void shouldSearchBySupportedVector(final Vector vector,
-                                       final FieldSearchPath fieldSearchPath,
-                                       final VectorSearchOptions vectorSearchOptions) {
+    void shouldSearchBySupportedVectorWithSearchScore(final Vector vector,
+                                                      final FieldSearchPath fieldSearchPath,
+                                                      final VectorSearchOptions vectorSearchOptions) {
         //given
         List<Bson> pipeline = asList(
                 Aggregates.vectorSearch(
@@ -224,6 +241,31 @@ class AggregatesVectorSearchIntegrationTest {
         assertScoreIsDecreasing(aggregate);
         Document highestScoreDocument = aggregate.get(0);
         assertEquals(1, highestScoreDocument.getDouble("vectorSearchScore"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideSupportedVectors")
+    void shouldSearchBySupportedVector(final Vector vector,
+                                       final FieldSearchPath fieldSearchPath,
+                                       final VectorSearchOptions vectorSearchOptions) {
+        //given
+        List<Bson> pipeline = asList(
+                Aggregates.vectorSearch(
+                        fieldSearchPath,
+                        vector,
+                        VECTOR_INDEX, LIMIT,
+                        vectorSearchOptions)
+        );
+
+        //when
+        List<Document> aggregate = collectionHelper.aggregate(pipeline);
+
+        //then
+        Assertions.assertEquals(LIMIT, aggregate.size());
+        assertFalse(
+                aggregate.stream()
+                        .anyMatch(document -> document.containsKey("vectorSearchScore"))
+        );
     }
 
     @ParameterizedTest
@@ -260,7 +302,8 @@ class AggregatesVectorSearchIntegrationTest {
         double previousScore = Integer.MAX_VALUE;
         for (Document document : aggregate) {
             Double vectorSearchScore = document.getDouble("vectorSearchScore");
-            assertTrue(vectorSearchScore < previousScore);
+            assertTrue(vectorSearchScore > 0, "Expected positive score");
+            assertTrue(vectorSearchScore < previousScore, "Expected decreasing score");
             previousScore = vectorSearchScore;
         }
     }
@@ -268,9 +311,12 @@ class AggregatesVectorSearchIntegrationTest {
     private static void awaitIndexCreation() throws InterruptedException {
         int attempts = 5;
         while (attempts-- > 0) {
-            if (collectionHelper.listSearchIndex(VECTOR_INDEX).isPresent()) {
+            if (collectionHelper.listSearchIndex(VECTOR_INDEX)
+                    .filter(document -> document.getBoolean("queryable"))
+                    .isPresent()) {
                 return;
             }
+
             TimeUnit.SECONDS.sleep(1);
         }
         Assertions.fail("Exceeded maximum attempts waiting for Search Index creation in Atlas cluster");
