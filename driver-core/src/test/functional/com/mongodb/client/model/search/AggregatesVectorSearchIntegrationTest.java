@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static com.mongodb.ClusterFixture.isAtlasSearchTest;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
@@ -164,7 +165,7 @@ class AggregatesVectorSearchIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        //assumeTrue(isAtlasSearchTest());
+        assumeTrue(isAtlasSearchTest());
         assumeTrue(serverVersionAtLeast(6, 0));
     }
 
