@@ -80,7 +80,7 @@ final class SyncOperationHelper {
          * @return the function result
          */
         @Nullable
-        R apply(T t, ConnectionSource source, Connection connection);
+        R apply(T t, ConnectionSource source, Connection connection, OperationContext operationContext);
     }
 
     interface CommandWriteTransformer<T, R> {
@@ -172,29 +172,31 @@ final class SyncOperationHelper {
 
     static <D, T> T executeRetryableRead(
             final ReadBinding binding,
+            final OperationContext operationContext,
             final String database,
             final CommandCreator commandCreator,
             final Decoder<D> decoder,
             final CommandReadTransformer<D, T> transformer,
             final boolean retryReads) {
-        return executeRetryableRead(binding, binding::getReadConnectionSource, database, commandCreator,
+        return executeRetryableRead(binding, operationContext, binding::getReadConnectionSource, database, commandCreator,
                                     decoder, transformer, retryReads);
     }
 
     static <D, T> T executeRetryableRead(
             final ReadBinding binding,
+            final OperationContext operationContext,
             final Supplier<ConnectionSource> readConnectionSourceSupplier,
             final String database,
             final CommandCreator commandCreator,
             final Decoder<D> decoder,
             final CommandReadTransformer<D, T> transformer,
             final boolean retryReads) {
-        RetryState retryState = CommandOperationHelper.initialRetryState(retryReads, binding.getOperationContext().getTimeoutContext());
+        RetryState retryState = CommandOperationHelper.initialRetryState(retryReads, operationContext.getTimeoutContext());
 
-        Supplier<T> read = decorateReadWithRetries(retryState, binding.getOperationContext(), () ->
+        Supplier<T> read = decorateReadWithRetries(retryState, operationContext, () ->
                 withSourceAndConnection(readConnectionSourceSupplier, false, (source, connection) -> {
-                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), binding.getOperationContext()));
-                    return createReadCommandAndExecute(retryState, binding.getOperationContext(), source, database,
+                    retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContext));
+                    return createReadCommandAndExecute(retryState, operationContext, source, database,
                                                        commandCreator, decoder, transformer, connection);
                 })
         );
@@ -202,39 +204,43 @@ final class SyncOperationHelper {
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    static <T> T executeCommand(final WriteBinding binding, final String database, final CommandCreator commandCreator,
+    static <T> T executeCommand(final WriteBinding binding, final OperationContext operationContext, final String database,
+                                final CommandCreator commandCreator,
             final CommandWriteTransformer<BsonDocument, T> transformer) {
         return withSourceAndConnection(binding::getWriteConnectionSource, false, (source, connection) ->
                 transformer.apply(assertNotNull(
                         connection.command(database,
-                                commandCreator.create(binding.getOperationContext(),
+                                commandCreator.create(operationContext,
                                         source.getServerDescription(),
                                         connection.getDescription()),
-                                NoOpFieldNameValidator.INSTANCE, primary(), BSON_DOCUMENT_CODEC, binding.getOperationContext())),
+                                NoOpFieldNameValidator.INSTANCE, primary(), BSON_DOCUMENT_CODEC, operationContext)),
                         connection));
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    static <D, T> T executeCommand(final WriteBinding binding, final String database, final BsonDocument command,
+    static <D, T> T executeCommand(final WriteBinding binding, final OperationContext operationContext, final String database,
+                                   final BsonDocument command,
                                    final Decoder<D> decoder, final CommandWriteTransformer<D, T> transformer) {
         return withSourceAndConnection(binding::getWriteConnectionSource, false, (source, connection) ->
                 transformer.apply(assertNotNull(
                         connection.command(database, command, NoOpFieldNameValidator.INSTANCE, primary(), decoder,
-                                binding.getOperationContext())), connection));
+                                operationContext)), connection));
     }
 
     @Nullable
-    static <T> T executeCommand(final WriteBinding binding, final String database, final BsonDocument command,
+    static <T> T executeCommand(final WriteBinding binding, final OperationContext operationContext, final String database,
+                                final BsonDocument command,
                                 final Connection connection, final CommandWriteTransformer<BsonDocument, T> transformer) {
         notNull("binding", binding);
         return transformer.apply(assertNotNull(
                 connection.command(database, command, NoOpFieldNameValidator.INSTANCE, primary(), BSON_DOCUMENT_CODEC,
-                        binding.getOperationContext())),
+                        operationContext)),
                 connection);
     }
 
     static <T, R> R executeRetryableWrite(
             final WriteBinding binding,
+            final OperationContext operationContext,
             final String database,
             @Nullable final ReadPreference readPreference,
             final FieldNameValidator fieldNameValidator,
@@ -242,10 +248,10 @@ final class SyncOperationHelper {
             final CommandCreator commandCreator,
             final CommandWriteTransformer<T, R> transformer,
             final com.mongodb.Function<BsonDocument, BsonDocument> retryCommandModifier) {
-        RetryState retryState = CommandOperationHelper.initialRetryState(true, binding.getOperationContext().getTimeoutContext());
-        Supplier<R> retryingWrite = decorateWriteWithRetries(retryState, binding.getOperationContext(), () -> {
+        RetryState retryState = CommandOperationHelper.initialRetryState(true, operationContext.getTimeoutContext());
+        Supplier<R> retryingWrite = decorateWriteWithRetries(retryState, operationContext, () -> {
             boolean firstAttempt = retryState.isFirstAttempt();
-            SessionContext sessionContext = binding.getOperationContext().getSessionContext();
+            SessionContext sessionContext = operationContext.getSessionContext();
             if (!firstAttempt && sessionContext.hasActiveTransaction()) {
                 sessionContext.clearTransactionContext();
             }
@@ -257,7 +263,7 @@ final class SyncOperationHelper {
                             .map(previousAttemptCommand -> {
                                 assertFalse(firstAttempt);
                                 return retryCommandModifier.apply(previousAttemptCommand);
-                            }).orElseGet(() -> commandCreator.create(binding.getOperationContext(), source.getServerDescription(),
+                            }).orElseGet(() -> commandCreator.create(operationContext, source.getServerDescription(),
                                     connection.getDescription()));
                     // attach `maxWireVersion`, `retryableCommandFlag` ASAP because they are used to check whether we should retry
                     retryState.attach(AttachmentKeys.maxWireVersion(), maxWireVersion, true)
@@ -265,7 +271,7 @@ final class SyncOperationHelper {
                             .attach(AttachmentKeys.commandDescriptionSupplier(), command::getFirstKey, false)
                             .attach(AttachmentKeys.command(), command, false);
                     return transformer.apply(assertNotNull(connection.command(database, command, fieldNameValidator, readPreference,
-                                    commandResultDecoder, binding.getOperationContext())),
+                                    commandResultDecoder, operationContext)),
                             connection);
                 } catch (MongoException e) {
                     if (!firstAttempt) {
@@ -295,8 +301,11 @@ final class SyncOperationHelper {
         BsonDocument command = commandCreator.create(operationContext, source.getServerDescription(),
                 connection.getDescription());
         retryState.attach(AttachmentKeys.commandDescriptionSupplier(), command::getFirstKey, false);
-        return transformer.apply(assertNotNull(connection.command(database, command, NoOpFieldNameValidator.INSTANCE,
-                source.getReadPreference(), decoder, operationContext)), source, connection);
+
+        D result = assertNotNull(connection.command(database, command, NoOpFieldNameValidator.INSTANCE,
+                source.getReadPreference(), decoder, operationContext));
+
+        return transformer.apply(result, source, connection, operationContext);
     }
 
 
@@ -329,15 +338,19 @@ final class SyncOperationHelper {
     }
 
     static <T> CommandReadTransformer<BsonDocument, BatchCursor<T>> singleBatchCursorTransformer(final String fieldName) {
-        return (result, source, connection) ->
+        return (result, source, connection, operationContext) ->
                 new SingleBatchCursor<>(BsonDocumentWrapperHelper.toList(result, fieldName), 0,
                         connection.getDescription().getServerAddress());
     }
 
-    static <T> CommandBatchCursor<T> cursorDocumentToBatchCursor(final TimeoutMode timeoutMode, final BsonDocument cursorDocument,
-            final int batchSize, final Decoder<T> decoder, @Nullable final BsonValue comment, final ConnectionSource source,
-            final Connection connection) {
-        return new CommandBatchCursor<>(timeoutMode, cursorDocument, batchSize, 0, decoder, comment, source, connection);
+    static <T> CommandBatchCursorNew<T> cursorDocumentToBatchCursor(final TimeoutMode timeoutMode, final BsonDocument cursorDocument,
+                                                                    final int batchSize, final Decoder<T> decoder,
+                                                                    @Nullable final BsonValue comment, final ConnectionSource source,
+                                                                    final Connection connection, final OperationContext operationContext) {
+        return new CommandBatchCursorNew<>(timeoutMode, operationContext, new CommandCoreCursor<>(
+                cursorDocument, batchSize, 0, decoder, comment, source, connection
+        ));
+
     }
 
     private SyncOperationHelper() {

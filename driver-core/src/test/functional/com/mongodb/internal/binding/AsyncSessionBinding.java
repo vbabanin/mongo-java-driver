@@ -51,11 +51,6 @@ public final class AsyncSessionBinding implements AsyncReadWriteBinding {
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return operationContext;
-    }
-
-    @Override
     public void getReadConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
         wrapped.getReadConnectionSource((result, t) -> {
             if (t != null) {
@@ -110,6 +105,12 @@ public final class AsyncSessionBinding implements AsyncReadWriteBinding {
         @Override
         public OperationContext getOperationContext() {
             return operationContext;
+        }
+
+        @Override
+        public BindingContext withOperationContext(final OperationContext operationContext) {
+            //TODO
+            return null;
         }
 
         @Override

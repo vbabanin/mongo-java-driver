@@ -24,8 +24,13 @@ import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.client.model.Collation;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.AggregationLevel;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -39,8 +44,10 @@ import java.util.List;
 
 import static com.mongodb.assertions.Assertions.isTrueArgument;
 import static com.mongodb.assertions.Assertions.notNull;
+import static com.mongodb.internal.operation.AsyncOperationHelper.CommandReadTransformerAsync;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeRetryableReadAsync;
 import static com.mongodb.internal.operation.ServerVersionHelper.FIVE_DOT_ZERO_WIRE_VERSION;
+import static com.mongodb.internal.operation.SyncOperationHelper.CommandReadTransformer;
 import static com.mongodb.internal.operation.SyncOperationHelper.executeRetryableRead;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 import static com.mongodb.internal.operation.WriteConcernHelper.throwOnWriteConcernError;
@@ -152,30 +159,25 @@ public class AggregateToCollectionOperation implements AsyncReadOperation<Void>,
     }
 
     @Override
-    public Void execute(final ReadBinding binding) {
+    public Void execute(final ReadBinding binding, final OperationContext operationContext) {
         return executeRetryableRead(binding,
+                operationContext,
                                     () -> binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary()),
                                     namespace.getDatabaseName(),
                                     getCommandCreator(),
-                                    new BsonDocumentCodec(), (result, source, connection) -> {
-                    throwOnWriteConcernError(result, connection.getDescription().getServerAddress(),
-                            connection.getDescription().getMaxWireVersion(), binding.getOperationContext().getTimeoutContext());
-                    return null;
-                }, false);
+                new BsonDocumentCodec(), transformer(), false);
     }
 
     @Override
-    public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<Void> callback) {
+    public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext,
+                             final SingleResultCallback<Void> callback) {
         executeRetryableReadAsync(binding,
+                                  operationContext,
                                   (connectionSourceCallback) ->
                         binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary(), connectionSourceCallback),
                                   namespace.getDatabaseName(),
                                   getCommandCreator(),
-                                  new BsonDocumentCodec(), (result, source, connection) -> {
-                    throwOnWriteConcernError(result, connection.getDescription().getServerAddress(),
-                            connection.getDescription().getMaxWireVersion(), binding.getOperationContext().getTimeoutContext());
-                    return null;
-                }, false, callback);
+                new BsonDocumentCodec(), asyncTransformer(), false, callback);
     }
 
     private CommandOperationHelper.CommandCreator getCommandCreator() {
@@ -212,6 +214,22 @@ public class AggregateToCollectionOperation implements AsyncReadOperation<Void>,
                 commandDocument.put("let", variables);
             }
             return commandDocument;
+        };
+    }
+
+    private static CommandReadTransformer<BsonDocument, Void> transformer() {
+        return (result, source, connection, operationContext) -> {
+            throwOnWriteConcernError(result, connection.getDescription().getServerAddress(),
+                    connection.getDescription().getMaxWireVersion(), operationContext.getTimeoutContext());
+            return null;
+        };
+    }
+
+    private static CommandReadTransformerAsync<BsonDocument, Void> asyncTransformer() {
+        return (result, source, connection, operationContext) -> {
+            throwOnWriteConcernError(result, connection.getDescription().getServerAddress(),
+                    connection.getDescription().getMaxWireVersion(), operationContext.getTimeoutContext());
+            return null;
         };
     }
 }

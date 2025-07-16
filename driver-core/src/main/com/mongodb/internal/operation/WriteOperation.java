@@ -17,6 +17,9 @@
 package com.mongodb.internal.operation;
 
 import com.mongodb.internal.binding.WriteBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
 
 /**
  * An operation which writes to a MongoDB server.
@@ -31,5 +34,5 @@ public interface WriteOperation<T> {
      * @param binding the binding to execute in the context of
      * @return T, the result of the execution
      */
-    T execute(WriteBinding binding);
+    T execute(WriteBinding binding, OperationContext operationContext);
 }

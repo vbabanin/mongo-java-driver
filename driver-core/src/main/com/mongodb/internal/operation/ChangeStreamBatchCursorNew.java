@@ -1,3 +1,5 @@
+package com.mongodb.internal.operation;
+
 /*
  * Copyright 2008-present MongoDB, Inc.
  *
@@ -14,7 +16,6 @@
  * limitations under the License.
  */
 
-package com.mongodb.internal.operation;
 
 import com.mongodb.MongoChangeStreamException;
 import com.mongodb.MongoException;
@@ -22,8 +23,8 @@ import com.mongodb.MongoOperationTimeoutException;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
 import com.mongodb.internal.TimeoutContext;
-import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -56,12 +57,12 @@ import static com.mongodb.internal.operation.SyncOperationHelper.withReadConnect
  * request first.
  * </p>
  */
-final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T> {
-    private final ReadBinding binding;
+final class ChangeStreamBatchCursorNew<T> implements AggregateResponseBatchCursor<T> {
+    private ReadBinding binding;
+    private OperationContext operationContext;
     private final ChangeStreamOperation<T> changeStreamOperation;
     private final int maxWireVersion;
-    private final TimeoutContext timeoutContext;
-    private CommandBatchCursor<RawBsonDocument> wrapped;
+    private CoreCursor<RawBsonDocument> wrapped;
     private BsonDocument resumeToken;
     private final AtomicBoolean closed;
 
@@ -72,15 +73,15 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
      */
     private boolean lastOperationTimedOut;
 
-    ChangeStreamBatchCursor(final ChangeStreamOperation<T> changeStreamOperation,
-                            final CommandBatchCursor<RawBsonDocument> wrapped,
-                            final ReadBinding binding,
-                            @Nullable final BsonDocument resumeToken,
-                            final int maxWireVersion) {
-        // this.timeoutContext = binding.getOperationContext().getTimeoutContext();
-        this.timeoutContext = new TimeoutContext(new TimeoutSettings(1, 1, 1, 1L, 1L));
+    ChangeStreamBatchCursorNew(final ChangeStreamOperation<T> changeStreamOperation,
+                               final CoreCursor<RawBsonDocument> wrapped,
+                               final ReadBinding binding,
+                               final OperationContext operationContext,
+                               @Nullable final BsonDocument resumeToken,
+                               final int maxWireVersion) {
         this.changeStreamOperation = changeStreamOperation;
         this.binding = binding.retain();
+        this.operationContext = operationContext;
         this.wrapped = wrapped;
         this.resumeToken = resumeToken;
         this.maxWireVersion = maxWireVersion;
@@ -88,7 +89,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         lastOperationTimedOut = false;
     }
 
-    CommandBatchCursor<RawBsonDocument> getWrapped() {
+    CoreCursor<RawBsonDocument> getWrapped() {
         return wrapped;
     }
 
@@ -96,7 +97,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
     public boolean hasNext() {
         return resumeableOperation(commandBatchCursor -> {
             try {
-                return commandBatchCursor.hasNext();
+                return commandBatchCursor.hasNext(operationContext);
             } finally {
                 cachePostBatchResumeToken(commandBatchCursor);
             }
@@ -107,12 +108,16 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
     public List<T> next() {
         return resumeableOperation(commandBatchCursor -> {
             try {
-                return convertAndProduceLastId(commandBatchCursor.next(), changeStreamOperation.getDecoder(),
+                return convertAndProduceLastId(commandBatchCursor.next(operationContext), changeStreamOperation.getDecoder(),
                         lastId -> resumeToken = lastId);
             } finally {
                 cachePostBatchResumeToken(commandBatchCursor);
             }
         });
+    }
+
+    private void restartTimeout() {
+        operationContext = operationContext.withNewlyStartedTimeout();
     }
 
     @Override
@@ -124,7 +129,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
     public List<T> tryNext() {
         return resumeableOperation(commandBatchCursor -> {
             try {
-                List<RawBsonDocument> tryNext = commandBatchCursor.tryNext();
+                List<RawBsonDocument> tryNext = commandBatchCursor.tryNext(operationContext);
                 return tryNext == null ? null
                         : convertAndProduceLastId(tryNext, changeStreamOperation.getDecoder(), lastId -> resumeToken = lastId);
             } finally {
@@ -136,8 +141,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
     @Override
     public void close() {
         if (!closed.getAndSet(true)) {
-            timeoutContext.resetTimeoutIfPresent();
-            wrapped.close();
+            wrapped.close(operationContext);
             binding.release();
         }
     }
@@ -187,7 +191,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         return maxWireVersion;
     }
 
-    private void cachePostBatchResumeToken(final AggregateResponseBatchCursor<RawBsonDocument> commandBatchCursor) {
+    private void cachePostBatchResumeToken(final CoreCursor<RawBsonDocument> commandBatchCursor) {
         if (commandBatchCursor.getPostBatchResumeToken() != null) {
             resumeToken = commandBatchCursor.getPostBatchResumeToken();
         }
@@ -213,8 +217,8 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         return results;
     }
 
-    <R> R resumeableOperation(final Function<AggregateResponseBatchCursor<RawBsonDocument>, R> function) {
-        timeoutContext.resetTimeoutIfPresent();
+    <R> R resumeableOperation(final Function<CoreCursor<RawBsonDocument>, R> function) {
+        restartTimeout();
         try {
             R result = execute(function);
             lastOperationTimedOut = false;
@@ -225,7 +229,7 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         }
     }
 
-    private <R> R execute(final Function<AggregateResponseBatchCursor<RawBsonDocument>, R> function) {
+    private <R> R execute(final Function<CoreCursor<RawBsonDocument>, R> function) {
         boolean shouldBeResumed = hasPreviousNextTimedOut();
         while (true) {
             if (shouldBeResumed) {
@@ -243,14 +247,13 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
     }
 
     private void resumeChangeStream() {
-        wrapped.close();
+        wrapped.close(operationContext);
 
         withReadConnectionSource(binding, source -> {
             changeStreamOperation.setChangeStreamOptionsForResume(resumeToken, source.getServerDescription().getMaxWireVersion());
             return null;
         });
-        wrapped = ((ChangeStreamBatchCursor<T>) changeStreamOperation.execute(binding,
-                OperationContext.simpleOperationContext(timeoutContext))).getWrapped();
+        wrapped = ((ChangeStreamBatchCursorNew<T>) changeStreamOperation.execute(binding, operationContext)).getWrapped();
         binding.release(); // release the new change stream batch cursor's reference to the binding
     }
 
@@ -262,3 +265,4 @@ final class ChangeStreamBatchCursor<T> implements AggregateResponseBatchCursor<T
         return exception instanceof MongoOperationTimeoutException;
     }
 }
+

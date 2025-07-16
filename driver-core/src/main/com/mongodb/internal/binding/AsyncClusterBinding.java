@@ -76,8 +76,8 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return operationContext;
+    public AsyncClusterBinding withOperationContext(final OperationContext operationContext) {
+        return new AsyncClusterBinding(cluster, readPreference, readConcern, operationContext);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
                     callback.onResult(null, t);
                 } else {
                     callback.onResult(new AsyncClusterBindingConnectionSource(result.getServer(), result.getServerDescription(),
-                            readPreferenceWithFallbackServerSelector.getAppliedReadPreference()), null);
+                            readPreferenceWithFallbackServerSelector.getAppliedReadPreference(), operationContext), null);
                 }
             });
         }
@@ -122,7 +122,7 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
                 callback.onResult(null, t);
             } else {
                 callback.onResult(new AsyncClusterBindingConnectionSource(result.getServer(), result.getServerDescription(),
-                        readPreference), null);
+                        readPreference, operationContext), null);
             }
         });
     }
@@ -131,14 +131,18 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
         private final Server server;
         private final ServerDescription serverDescription;
         private final ReadPreference appliedReadPreference;
+        private final OperationContext operationContext;
 
-        private AsyncClusterBindingConnectionSource(final Server server, final ServerDescription serverDescription,
-                final ReadPreference appliedReadPreference) {
+        private AsyncClusterBindingConnectionSource(final Server server,
+                                                    final ServerDescription serverDescription,
+                                                    final ReadPreference appliedReadPreference,
+                                                    final OperationContext operationContext) {
             this.server = server;
             this.serverDescription = serverDescription;
             this.appliedReadPreference = appliedReadPreference;
             operationContext.getTimeoutContext().minRoundTripTimeMS(NANOSECONDS.toMillis(serverDescription.getMinRoundTripTimeNanos()));
             AsyncClusterBinding.this.retain();
+            this.operationContext = operationContext;
         }
 
         @Override
@@ -147,8 +151,8 @@ public class AsyncClusterBinding extends AbstractReferenceCounted implements Asy
         }
 
         @Override
-        public OperationContext getOperationContext() {
-            return operationContext;
+        public AsyncClusterBindingConnectionSource withOperationContext(final OperationContext operationContext) {
+            return new AsyncClusterBindingConnectionSource(server, serverDescription, appliedReadPreference, operationContext);
         }
 
         @Override

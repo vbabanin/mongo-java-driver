@@ -56,6 +56,11 @@ public final class AsyncOperationContextBinding implements AsyncReadWriteBinding
     }
 
     @Override
+    public BindingContext withOperationContext(final OperationContext operationContext) {
+        return null;
+    }
+
+    @Override
     public void getReadConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
         wrapped.getReadConnectionSource((result, t) -> {
             if (t != null) {
@@ -110,6 +115,11 @@ public final class AsyncOperationContextBinding implements AsyncReadWriteBinding
         @Override
         public OperationContext getOperationContext() {
             return operationContext;
+        }
+
+        @Override
+        public BindingContext withOperationContext(final OperationContext operationContext) {
+            return null;
         }
 
         @Override

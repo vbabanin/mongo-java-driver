@@ -22,7 +22,14 @@ import com.mongodb.client.model.Collation;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.session.SessionContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -69,8 +76,8 @@ public abstract class BaseFindAndModifyOperation<T> implements AsyncWriteOperati
     }
 
     @Override
-    public T execute(final WriteBinding binding) {
-        return executeRetryableWrite(binding, getDatabaseName(), null, getFieldNameValidator(),
+    public T execute(final WriteBinding binding, final OperationContext operationContext) {
+        return executeRetryableWrite(binding, operationContext, getDatabaseName(), null, getFieldNameValidator(),
                                      CommandResultDocumentCodec.create(getDecoder(), "value"),
                                      getCommandCreator(),
                                      FindAndModifyHelper.transformer(),
@@ -78,8 +85,8 @@ public abstract class BaseFindAndModifyOperation<T> implements AsyncWriteOperati
     }
 
     @Override
-    public void executeAsync(final AsyncWriteBinding binding, final SingleResultCallback<T> callback) {
-        executeRetryableWriteAsync(binding, getDatabaseName(), null, getFieldNameValidator(),
+    public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<T> callback) {
+        executeRetryableWriteAsync(binding, operationContext, getDatabaseName(), null, getFieldNameValidator(),
                                    CommandResultDocumentCodec.create(getDecoder(), "value"),
                                    getCommandCreator(),
                 FindAndModifyHelper.asyncTransformer(), cmd -> cmd, callback);

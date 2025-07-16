@@ -16,6 +16,7 @@
 
 package com.mongodb.internal.connection.netty;
 
+import io.netty.buffer.ByteBufAllocator;
 import org.bson.ByteBuf;
 
 import java.nio.ByteBuffer;
@@ -283,5 +284,28 @@ public final class NettyByteBuf implements ByteBuf {
     @Override
     public void release() {
         proxied.release();
+    }
+
+    public static void main(String[] args) {
+        io.netty.buffer.ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+
+        System.err.println(buf.refCnt());
+        io.netty.buffer.ByteBuf duplicate = buf.duplicate();
+        System.err.println(duplicate.refCnt());
+        System.err.println(buf.refCnt());
+
+//        System.err.println(duplicate.retain());
+//        System.err.println(duplicate.refCnt());
+//        System.err.println(buf.refCnt());
+
+        System.err.println("release duplicate");
+        System.err.println(duplicate.release());
+        System.err.println(duplicate.refCnt());
+        System.err.println(buf.refCnt());
+
+        System.err.println("release duplicate");
+        System.err.println(duplicate.release());
+        System.err.println(duplicate.refCnt());
+        System.err.println(buf.refCnt());
     }
 }

@@ -25,14 +25,10 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
 import com.mongodb.annotations.ThreadSafe;
-import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerType;
-import com.mongodb.internal.TimeoutContext;
-import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.VisibleForTesting;
 import com.mongodb.internal.binding.ConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
@@ -60,7 +56,7 @@ import static com.mongodb.internal.operation.CommandBatchCursorHelper.getMoreCom
 import static com.mongodb.internal.operation.CommandBatchCursorHelper.logCommandCursorResult;
 import static com.mongodb.internal.operation.CommandBatchCursorHelper.translateCommandException;
 
-class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
+class CommandCoreCursor<T> implements CoreCursor<T> {
 
     private final MongoNamespace namespace;
     private final Decoder<T> decoder;
@@ -69,8 +65,6 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private final int maxWireVersion;
     private final boolean firstBatchEmpty;
     private final ResourceManager resourceManager;
-    private final TimeoutMode timeoutMode;
-    private OperationContext operationContext;
 
     private int batchSize;
     private CommandCursorResult<T> commandCursorResult;
@@ -78,10 +72,10 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     private List<T> nextBatch;
     private boolean resetTimeoutWhenClosing;
 
-    CommandBatchCursor(
-            final TimeoutMode timeoutMode,
+    CommandCoreCursor(
             final BsonDocument commandCursorDocument,
-            final int batchSize, final long maxTimeMS,
+            final int batchSize,
+            final long maxTimeMS,
             final Decoder<T> decoder,
             @Nullable final BsonValue comment,
             final ConnectionSource connectionSource,
@@ -94,10 +88,9 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         this.comment = comment;
         this.maxWireVersion = connectionDescription.getMaxWireVersion();
         this.firstBatchEmpty = commandCursorResult.getResults().isEmpty();
-        this.timeoutMode = timeoutMode;
 
-        operationContext = OperationContext.simpleOperationContext(new TimeoutContext(new TimeoutSettings(1, 1, 1, 1L, 1L)));
-        operationContext.getTimeoutContext().setMaxTimeOverride(maxTimeMS); // TODO-JAVA-5640 with?
+//        operationContext = connectionSource.getOperationContext();
+//        operationContext.getOperationContext().setMaxTimeOverride(maxTimeMS); // TODO-JAVA-5640 with?
 
         Connection connectionToPin = connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER ? connection : null;
         resourceManager = new ResourceManager(namespace, connectionSource, connectionToPin, commandCursorResult.getServerCursor());
@@ -105,18 +98,18 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     @Override
-    public boolean hasNext() {
-        return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_CURSOR, this::doHasNext));
+    public boolean hasNext(OperationContext operationContext) {
+        return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_CURSOR, () -> doHasNext(operationContext), operationContext));
     }
 
-    private boolean doHasNext() {
+
+    private boolean doHasNext(OperationContext operationContext) {
         if (nextBatch != null) {
             return true;
         }
 
-        checkTimeoutModeAndResetTimeoutContextIfIteration();
         while (resourceManager.getServerCursor() != null) {
-            getMore();
+            getMore(operationContext);
             if (!resourceManager.operable()) {
                 throw new IllegalStateException(MESSAGE_IF_CLOSED_AS_CURSOR);
             }
@@ -129,8 +122,8 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     @Override
-    public List<T> next() {
-        return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_ITERATOR, this::doNext));
+    public List<T> next(OperationContext operationContext) {
+        return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_ITERATOR, () -> doNext(operationContext), operationContext));
     }
 
     @Override
@@ -139,8 +132,8 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
     }
 
     @Nullable
-    private List<T> doNext() {
-        if (!doHasNext()) {
+    private List<T> doNext(OperationContext operationContext) {
+        if (!doHasNext(operationContext)) {
             throw new NoSuchElementException();
         }
 
@@ -164,34 +157,30 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         return batchSize;
     }
 
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not implemented yet!");
-    }
 
     @Override
-    public void close() {
-        resourceManager.close();
+    public void close(OperationContext operationContext) {
+        resourceManager.close(operationContext);
     }
 
     @Nullable
     @Override
-    public List<T> tryNext() {
+    public List<T> tryNext(OperationContext operationContext) {
         return resourceManager.execute(MESSAGE_IF_CLOSED_AS_CURSOR, () -> {
-            if (!tryHasNext()) {
+            if (!tryHasNext(operationContext)) {
                 return null;
             }
-            return doNext();
-        });
+            return doNext(operationContext);
+        }, operationContext);
     }
 
-    private boolean tryHasNext() {
+    private boolean tryHasNext(OperationContext operationContext) {
         if (nextBatch != null) {
             return true;
         }
 
         if (resourceManager.getServerCursor() != null) {
-            getMore();
+            getMore(operationContext);
         }
 
         return nextBatch != null;
@@ -235,34 +224,40 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         return maxWireVersion;
     }
 
-    void checkTimeoutModeAndResetTimeoutContextIfIteration() {
-        if (timeoutMode == TimeoutMode.ITERATION) {
-            operationContext = operationContext.withNewlyStartedTimeout();
-        }
-    }
-
-    private void getMore() {
+    private void getMore(OperationContext operationContext) {
         ServerCursor serverCursor = assertNotNull(resourceManager.getServerCursor());
         resourceManager.executeWithConnection(connection -> {
             ServerCursor nextServerCursor;
             try {
+                //TODO, what we should do wit release?
+                ConnectionSource connectionSource = getConnectionSource(operationContext);
                 this.commandCursorResult = toCommandCursorResult(connection.getDescription().getServerAddress(), NEXT_BATCH,
                         assertNotNull(
-                            connection.command(namespace.getDatabaseName(),
-                                 getMoreCommandDocument(serverCursor.getId(), connection.getDescription(), namespace, batchSize, comment),
-                                 NoOpFieldNameValidator.INSTANCE,
-                                 ReadPreference.primary(),
-                                 CommandResultDocumentCodec.create(decoder, NEXT_BATCH), operationContext)));
+                                connection.command(namespace.getDatabaseName(),
+                                        getMoreCommandDocument(serverCursor.getId(), connection.getDescription(), namespace, batchSize,
+                                                comment),
+                                        NoOpFieldNameValidator.INSTANCE,
+                                        ReadPreference.primary(),
+                                        CommandResultDocumentCodec.create(decoder, NEXT_BATCH),
+                                        connectionSource.getOperationContext())));
                 nextServerCursor = commandCursorResult.getServerCursor();
             } catch (MongoCommandException e) {
                 throw translateCommandException(e, serverCursor);
             }
             resourceManager.setServerCursor(nextServerCursor);
-        });
+        }, operationContext);
+    }
+
+    private ConnectionSource getConnectionSource(final OperationContext operationContext) {
+        ConnectionSource connectionSource = assertNotNull(resourceManager.getConnectionSource());
+        //FIXME
+//        connectionSource =
+//                connectionSource.withOperationContext(connectionSource.withOperationContext(operationContext));
+        return connectionSource;
     }
 
     private CommandCursorResult<T> toCommandCursorResult(final ServerAddress serverAddress, final String fieldNameContainingBatch,
-            final BsonDocument commandCursorDocument) {
+                                                         final BsonDocument commandCursorDocument) {
         CommandCursorResult<T> commandCursorResult = new CommandCursorResult<>(serverAddress, fieldNameContainingBatch,
                 commandCursorDocument);
         logCommandCursorResult(commandCursorResult);
@@ -270,19 +265,9 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         return commandCursorResult;
     }
 
-    /**
-     * Configures the cursor to {@link #close()}
-     * without {@linkplain TimeoutContext#withNewlyStartedTimeout() starting a new}
-     * {@linkplain TimeoutContext#getTimeout() timeout}.
-     * This is useful when managing the {@link #close()} behavior externally.
-     */
-    CommandBatchCursor<T> disableTimeoutResetWhenClosing() {
-        resetTimeoutWhenClosing = false;
-        return this;
-    }
 
     @ThreadSafe
-    private final class ResourceManager extends CursorResourceManager<ConnectionSource, Connection> {
+    private final class ResourceManager extends CursorResourceManagerNew<ConnectionSource, Connection> {
         ResourceManager(
                 final MongoNamespace namespace,
                 final ConnectionSource connectionSource,
@@ -293,19 +278,17 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
 
         /**
          * Thread-safe.
-         * Executes {@code operation} within the {@link #tryStartOperation()}/{@link #endOperation()} bounds.
-         *
-         * @throws IllegalStateException If {@linkplain CommandBatchCursor#close() closed}.
          */
         @Nullable
-        <R> R execute(final String exceptionMessageIfClosed, final Supplier<R> operation) throws IllegalStateException {
+        <R> R execute(final String exceptionMessageIfClosed, final Supplier<R> operation, OperationContext operationContext)
+                throws IllegalStateException {
             if (!tryStartOperation()) {
                 throw new IllegalStateException(exceptionMessageIfClosed);
             }
             try {
                 return operation.get();
             } finally {
-                endOperation();
+                endOperation(operationContext);
             }
         }
 
@@ -315,9 +298,9 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
         }
 
         @Override
-        void doClose() {
-            TimeoutContext timeoutContext = operationContext.getTimeoutContext();
-            timeoutContext.resetToDefaultMaxTime();
+        void doClose(OperationContext operationContext) {
+            OperationContext resetedTImeoutContext = operationContext.withNewlyStartedTimeout();
+
             if (resetTimeoutWhenClosing) { // TODO-JAVA-5640 don't we always reset when closing?
                 releaseResources(operationContext);
             } else {
@@ -331,7 +314,7 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
                     unsetServerCursor();
                 }
                 if (super.getServerCursor() != null) {
-                    Connection connection = getConnection();
+                    Connection connection = getConnection(operationContext);
                     try {
                         releaseServerResources(connection, operationContext);
                     } finally {
@@ -339,7 +322,6 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
                     }
                 }
             } catch (MongoException e) {
-                System.err.println("Exception while releasing server resources: " + e.getMessage());
                 // ignore exceptions when releasing server resources
             } finally {
                 // guarantee that regardless of exceptions, `serverCursor` is null and client resources are released
@@ -348,8 +330,8 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             }
         }
 
-        void executeWithConnection(final Consumer<Connection> action) {
-            Connection connection = getConnection();
+        void executeWithConnection(final Consumer<Connection> action, final OperationContext operationContext) {
+            Connection connection = getConnection(operationContext);
             try {
                 action.accept(connection);
             } catch (MongoSocketException e) {
@@ -366,7 +348,7 @@ class CommandBatchCursor<T> implements AggregateResponseBatchCursor<T> {
             }
         }
 
-        private Connection getConnection() {
+        private Connection getConnection(OperationContext operationContext) {
             assertTrue(getState() != State.IDLE);
             Connection pinnedConnection = getPinnedConnection();
             if (pinnedConnection == null) {

@@ -23,10 +23,17 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.binding.AbstractReferenceCounted;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.binding.BindingContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.TransactionContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.session.ClientSessionContext;
@@ -46,13 +53,13 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements As
     private final AsyncClusterAwareReadWriteBinding wrapped;
     private final ClientSession session;
     private final boolean ownsSession;
-    private final OperationContext operationContext;
 
     public ClientSessionBinding(final ClientSession session, final boolean ownsSession, final AsyncClusterAwareReadWriteBinding wrapped) {
         this.wrapped = notNull("wrapped", wrapped).retain();
         this.ownsSession = ownsSession;
         this.session = notNull("session", session);
-        this.operationContext = wrapped.getOperationContext().withSessionContext(new AsyncClientSessionContext(session));
+        //TODO
+       // this.operationContext = wrapped.getOperationContext().withSessionContext(new AsyncClientSessionContext(session));
     }
 
     @Override
@@ -61,8 +68,8 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements As
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return operationContext;
+    public BindingContext withOperationContext(final OperationContext operationContext) {
+        return null;
     }
 
     @Override
@@ -141,8 +148,8 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements As
         }
 
         @Override
-        public OperationContext getOperationContext() {
-            return operationContext;
+        public BindingContext withOperationContext(final OperationContext operationContext) {
+            return null;
         }
 
         @Override

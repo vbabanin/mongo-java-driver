@@ -21,7 +21,11 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.binding.BindingContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.OperationContext;
 
@@ -52,11 +56,6 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
                 callback.onResult(new CryptConnectionSource(result), null);
             }
         });
-    }
-
-    @Override
-    public OperationContext getOperationContext() {
-        return wrapped.getOperationContext();
     }
 
     @Override
@@ -110,6 +109,11 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         return wrapped.release();
     }
 
+    @Override
+    public BindingContext withOperationContext(final OperationContext operationContext) {
+        return null;
+    }
+
     private class CryptConnectionSource implements AsyncConnectionSource {
         private final AsyncConnectionSource wrapped;
 
@@ -121,11 +125,6 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         @Override
         public ServerDescription getServerDescription() {
             return wrapped.getServerDescription();
-        }
-
-        @Override
-        public OperationContext getOperationContext() {
-            return wrapped.getOperationContext();
         }
 
         @Override
@@ -158,6 +157,11 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         @Override
         public int release() {
             return wrapped.release();
+        }
+
+        @Override
+        public BindingContext withOperationContext(final OperationContext operationContext) {
+            return null;
         }
     }
 }

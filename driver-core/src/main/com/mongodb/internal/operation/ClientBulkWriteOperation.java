@@ -48,9 +48,13 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryState;
 import com.mongodb.internal.binding.AsyncConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.bulk.AbstractClientDeleteModel;
 import com.mongodb.internal.client.model.bulk.AbstractClientDeleteOptions;
 import com.mongodb.internal.client.model.bulk.AbstractClientNamespacedWriteModel;
@@ -178,13 +182,13 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
     }
 
     @Override
-    public ClientBulkWriteResult execute(final WriteBinding binding) throws ClientBulkWriteException {
-        WriteConcern effectiveWriteConcern = validateAndGetEffectiveWriteConcern(binding.getOperationContext().getSessionContext());
+    public ClientBulkWriteResult execute(final WriteBinding binding, final OperationContext operationContext) throws ClientBulkWriteException {
+        WriteConcern effectiveWriteConcern = validateAndGetEffectiveWriteConcern(operationContext.getSessionContext());
         ResultAccumulator resultAccumulator = new ResultAccumulator();
         MongoException transformedTopLevelError = null;
 
         try {
-            executeAllBatches(effectiveWriteConcern, binding, resultAccumulator);
+            executeAllBatches(effectiveWriteConcern, binding, operationContext, resultAccumulator);
         } catch (MongoException topLevelError) {
             transformedTopLevelError = transformWriteException(topLevelError);
         }
@@ -194,13 +198,14 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
 
     @Override
     public void executeAsync(final AsyncWriteBinding binding,
+                             final OperationContext operationContext,
                              final SingleResultCallback<ClientBulkWriteResult> finalCallback) {
-        WriteConcern effectiveWriteConcern = validateAndGetEffectiveWriteConcern(binding.getOperationContext().getSessionContext());
+        WriteConcern effectiveWriteConcern = validateAndGetEffectiveWriteConcern(operationContext.getSessionContext());
         ResultAccumulator resultAccumulator = new ResultAccumulator();
         MutableValue<MongoException> transformedTopLevelError = new MutableValue<>();
 
         beginAsync().<Void>thenSupply(c -> {
-            executeAllBatchesAsync(effectiveWriteConcern, binding, resultAccumulator, c);
+            executeAllBatchesAsync(effectiveWriteConcern, binding, operationContext, resultAccumulator, c);
         }).onErrorIf(topLevelError -> topLevelError instanceof MongoException, (topLevelError, c) -> {
             transformedTopLevelError.set(transformWriteException((MongoException) topLevelError));
             c.complete(c);
@@ -221,27 +226,29 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
     private void executeAllBatches(
             final WriteConcern effectiveWriteConcern,
             final WriteBinding binding,
+            final OperationContext operationContext,
             final ResultAccumulator resultAccumulator) throws MongoException {
         Integer nextBatchStartModelIndex = INITIAL_BATCH_MODEL_START_INDEX;
 
         do {
-            nextBatchStartModelIndex = executeBatch(nextBatchStartModelIndex, effectiveWriteConcern, binding, resultAccumulator);
+            nextBatchStartModelIndex = executeBatch(nextBatchStartModelIndex, effectiveWriteConcern, binding, operationContext, resultAccumulator);
         } while (nextBatchStartModelIndex != null);
     }
 
     /**
-     * @see #executeAllBatches(WriteConcern, WriteBinding, ResultAccumulator)
+     * @see #executeAllBatches(WriteConcern, WriteBinding, OperationContext, ResultAccumulator)
      */
     private void executeAllBatchesAsync(
             final WriteConcern effectiveWriteConcern,
             final AsyncWriteBinding binding,
+            final OperationContext operationContext,
             final ResultAccumulator resultAccumulator,
             final SingleResultCallback<Void> finalCallback) {
         MutableValue<Integer> nextBatchStartModelIndex = new MutableValue<>(INITIAL_BATCH_MODEL_START_INDEX);
 
         beginAsync().thenRunDoWhileLoop(iterationCallback -> {
             beginAsync().<Integer>thenSupply(c -> {
-                executeBatchAsync(nextBatchStartModelIndex.get(), effectiveWriteConcern, binding, resultAccumulator, c);
+                executeBatchAsync(nextBatchStartModelIndex.get(), effectiveWriteConcern, binding, operationContext, resultAccumulator, c);
             }).<Void>thenApply((nextBatchStartModelIdx, c) -> {
                 nextBatchStartModelIndex.set(nextBatchStartModelIdx);
                 c.complete(c);
@@ -260,10 +267,10 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
             final int batchStartModelIndex,
             final WriteConcern effectiveWriteConcern,
             final WriteBinding binding,
+            final OperationContext operationContext,
             final ResultAccumulator resultAccumulator) {
         List<? extends ClientNamespacedWriteModel> unexecutedModels = models.subList(batchStartModelIndex, models.size());
         assertFalse(unexecutedModels.isEmpty());
-        OperationContext operationContext = binding.getOperationContext();
         SessionContext sessionContext = operationContext.getSessionContext();
         TimeoutContext timeoutContext = operationContext.getTimeoutContext();
         RetryState retryState = initialRetryState(retryWritesSetting, timeoutContext);
@@ -313,17 +320,17 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
     }
 
     /**
-     * @see #executeBatch(int, WriteConcern, WriteBinding, ResultAccumulator)
+     * @see #executeBatch(int, WriteConcern, WriteBinding, OperationContext, ResultAccumulator)
      */
     private void executeBatchAsync(
             final int batchStartModelIndex,
             final WriteConcern effectiveWriteConcern,
             final AsyncWriteBinding binding,
+            final OperationContext operationContext,
             final ResultAccumulator resultAccumulator,
             final SingleResultCallback<Integer> finalCallback) {
         List<? extends ClientNamespacedWriteModel> unexecutedModels = models.subList(batchStartModelIndex, models.size());
         assertFalse(unexecutedModels.isEmpty());
-        OperationContext operationContext = binding.getOperationContext();
         SessionContext sessionContext = operationContext.getSessionContext();
         TimeoutContext timeoutContext = operationContext.getTimeoutContext();
         RetryState retryState = initialRetryState(retryWritesSetting, timeoutContext);
@@ -408,7 +415,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
             return null;
         }
         List<List<BsonDocument>> cursorExhaustBatches = doWithRetriesDisabledForCommand(retryState, "getMore", () ->
-                exhaustBulkWriteCommandOkResponseCursor(connectionSource, connection, bulkWriteCommandOkResponse));
+                exhaustBulkWriteCommandOkResponseCursor(connectionSource, operationContext, connection, bulkWriteCommandOkResponse));
         return createExhaustiveClientBulkWriteCommandOkResponse(
                 bulkWriteCommandOkResponse,
                 cursorExhaustBatches,
@@ -509,16 +516,18 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
 
     private List<List<BsonDocument>> exhaustBulkWriteCommandOkResponseCursor(
             final ConnectionSource connectionSource,
+            final OperationContext operationContext,
             final Connection connection,
             final BsonDocument response) {
-        try (CommandBatchCursor<BsonDocument> cursor = cursorDocumentToBatchCursor(
+        try (CommandBatchCursorNew<BsonDocument> cursor = cursorDocumentToBatchCursor(
                 TimeoutMode.CURSOR_LIFETIME,
                 response,
                 SERVER_DEFAULT_CURSOR_BATCH_SIZE,
                 codecRegistry.get(BsonDocument.class),
                 options.getComment().orElse(null),
                 connectionSource,
-                connection)) {
+                connection,
+                operationContext)) {
 
            return cursor.exhaust();
         }
@@ -833,7 +842,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
         }
 
         /**
-         * @return See {@link #executeBatch(int, WriteConcern, WriteBinding, ResultAccumulator)}.
+         * @return See {@link #executeBatch(int, WriteConcern, WriteBinding, OperationContext, ResultAccumulator)}.
          */
         @Nullable
         Integer onBulkWriteCommandOkResponseWithWriteConcernError(
@@ -847,7 +856,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
         }
 
         /**
-         * @return See {@link #executeBatch(int, WriteConcern, WriteBinding, ResultAccumulator)}.
+         * @return See {@link #executeBatch(int, WriteConcern, WriteBinding,OperationContext, ResultAccumulator)}.
          */
         @Nullable
         private Integer onBulkWriteCommandOkResponseOrNoResponse(
@@ -1160,7 +1169,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
     }
 
     /**
-     * Exactly one instance must be used per {@linkplain #executeBatch(int, WriteConcern, WriteBinding, ResultAccumulator) batch}.
+     * Exactly one instance must be used per {@linkplain #executeBatch(int, WriteConcern, WriteBinding, OperationContext, ResultAccumulator) batch}.
      */
     @VisibleForTesting(otherwise = PRIVATE)
     public final class BatchEncoder {

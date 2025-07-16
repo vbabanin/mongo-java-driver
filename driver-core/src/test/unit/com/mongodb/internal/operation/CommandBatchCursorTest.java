@@ -29,6 +29,7 @@ import com.mongodb.connection.ServerVersion;
 import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.binding.ConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 import org.bson.BsonArray;

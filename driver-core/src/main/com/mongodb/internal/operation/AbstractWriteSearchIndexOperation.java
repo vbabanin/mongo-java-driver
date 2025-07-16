@@ -22,6 +22,7 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.WriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
 
@@ -45,12 +46,12 @@ abstract class AbstractWriteSearchIndexOperation implements AsyncWriteOperation<
     }
 
     @Override
-    public Void execute(final WriteBinding binding) {
+    public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         return withConnection(binding, connection -> {
             try {
-                executeCommand(binding, namespace.getDatabaseName(), buildCommand(),
+                executeCommand(binding, operationContext, namespace.getDatabaseName(), buildCommand(),
                         connection,
-                        writeConcernErrorTransformer(binding.getOperationContext().getTimeoutContext()));
+                        writeConcernErrorTransformer(operationContext.getTimeoutContext()));
             } catch (MongoCommandException mongoCommandException) {
                 swallowOrThrow(mongoCommandException);
             }
@@ -59,11 +60,11 @@ abstract class AbstractWriteSearchIndexOperation implements AsyncWriteOperation<
     }
 
     @Override
-    public void executeAsync(final AsyncWriteBinding binding, final SingleResultCallback<Void> callback) {
+    public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
         withAsyncSourceAndConnection(binding::getWriteConnectionSource, false, callback,
                 (connectionSource, connection, cb) ->
-                        executeCommandAsync(binding, namespace.getDatabaseName(), buildCommand(), connection,
-                                writeConcernErrorTransformerAsync(binding.getOperationContext().getTimeoutContext()), (result, commandExecutionError) -> {
+                        executeCommandAsync(binding, operationContext,  namespace.getDatabaseName(), buildCommand(), connection,
+                                writeConcernErrorTransformerAsync(operationContext.getTimeoutContext()), (result, commandExecutionError) -> {
                                     try {
                                         swallowOrThrow(commandExecutionError);
                                         callback.onResult(result, null);

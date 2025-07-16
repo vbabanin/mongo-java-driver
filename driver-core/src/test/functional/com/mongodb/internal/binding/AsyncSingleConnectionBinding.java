@@ -108,6 +108,24 @@ public class AsyncSingleConnectionBinding extends AbstractReferenceCounted imple
         }
     }
 
+    private AsyncSingleConnectionBinding(ReadPreference readPreference,
+                                         AsyncConnection readConnection,
+                                         AsyncConnection writeConnection,
+                                         Server readServer,
+                                         Server writeServer,
+                                         ServerDescription readServerDescription,
+                                         ServerDescription writeServerDescription,
+                                         OperationContext operationContext) {
+        this.readPreference = readPreference;
+        this.readConnection = readConnection;
+        this.writeConnection = writeConnection;
+        this.readServer = readServer;
+        this.writeServer = writeServer;
+        this.readServerDescription = readServerDescription;
+        this.writeServerDescription = writeServerDescription;
+        this.operationContext = operationContext;
+    }
+
     private void awaitLatch(final CountDownLatch latch) {
         try {
             if (!latch.await(operationContext.getTimeoutContext().timeoutOrAlternative(10000), TimeUnit.MILLISECONDS)) {
@@ -135,12 +153,18 @@ public class AsyncSingleConnectionBinding extends AbstractReferenceCounted imple
     }
 
     @Override
+    public AsyncSingleConnectionBinding withOperationContext(final OperationContext operationContext) {
+        return new AsyncSingleConnectionBinding(readPreference, readConnection, writeConnection,
+                readServer, writeServer, readServerDescription, writeServerDescription, operationContext);
+    }
+
+    @Override
     public void getReadConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
         isTrue("open", getCount() > 0);
         if (readPreference == primary()) {
             getWriteConnectionSource(callback);
         } else {
-            callback.onResult(new SingleAsyncConnectionSource(readServerDescription, readConnection), null);
+            callback.onResult(new SingleAsyncConnectionSource(readServerDescription, readConnection, operationContext), null);
         }
     }
 
@@ -153,7 +177,7 @@ public class AsyncSingleConnectionBinding extends AbstractReferenceCounted imple
     @Override
     public void getWriteConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
         isTrue("open", getCount() > 0);
-        callback.onResult(new SingleAsyncConnectionSource(writeServerDescription, writeConnection), null);
+        callback.onResult(new SingleAsyncConnectionSource(writeServerDescription, writeConnection, operationContext), null);
     }
 
     @Override
@@ -169,11 +193,15 @@ public class AsyncSingleConnectionBinding extends AbstractReferenceCounted imple
     private final class SingleAsyncConnectionSource extends AbstractReferenceCounted implements AsyncConnectionSource {
         private final ServerDescription serverDescription;
         private final AsyncConnection connection;
+        private final OperationContext operationContext;
 
         private SingleAsyncConnectionSource(final ServerDescription serverDescription,
-                                            final AsyncConnection connection) {
+                                            final AsyncConnection connection,
+                                            final OperationContext operationContext) {
             this.serverDescription = serverDescription;
             this.connection = connection;
+            this.operationContext = operationContext;
+            //TODO do we need to retain and release those references properly?
             AsyncSingleConnectionBinding.this.retain();
         }
 
@@ -185,6 +213,11 @@ public class AsyncSingleConnectionBinding extends AbstractReferenceCounted imple
         @Override
         public OperationContext getOperationContext() {
             return operationContext;
+        }
+
+        @Override
+        public BindingContext withOperationContext(final OperationContext operationContext) {
+            return new SingleAsyncConnectionSource(serverDescription, connection, operationContext);
         }
 
         @Override

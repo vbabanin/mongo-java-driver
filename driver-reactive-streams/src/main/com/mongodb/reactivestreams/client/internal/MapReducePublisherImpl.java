@@ -24,7 +24,9 @@ import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.FindOptions;
 import com.mongodb.internal.operation.AsyncOperations;
 import com.mongodb.internal.operation.AsyncReadOperation;
@@ -233,7 +235,7 @@ final class MapReducePublisherImpl<T> extends BatchCursorPublisher<T> implements
         }
 
         @Override
-        public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
+        public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
             operation.executeAsync(binding, callback::onResult);
         }
     }
@@ -250,7 +252,7 @@ final class MapReducePublisherImpl<T> extends BatchCursorPublisher<T> implements
         }
 
         @Override
-        public void executeAsync(final AsyncWriteBinding binding, final SingleResultCallback<Void> callback) {
+        public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
             operation.executeAsync(binding, (result, t) -> callback.onResult(null, t));
         }
     }

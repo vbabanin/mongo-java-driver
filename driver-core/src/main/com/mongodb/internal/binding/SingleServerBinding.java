@@ -51,7 +51,7 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
 
     @Override
     public ConnectionSource getWriteConnectionSource() {
-        return new SingleServerBindingConnectionSource();
+        return new SingleServerBindingConnectionSource(operationContext);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
 
     @Override
     public ConnectionSource getReadConnectionSource() {
-        return new SingleServerBindingConnectionSource();
+        return new SingleServerBindingConnectionSource(operationContext);
     }
 
     @Override
@@ -70,8 +70,8 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return operationContext;
+    public SingleServerBinding withOperationContext(final OperationContext operationContext) {
+        return new SingleServerBinding(cluster, serverAddress, operationContext);
     }
 
     @Override
@@ -82,21 +82,19 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
 
     private final class SingleServerBindingConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
         private final ServerDescription serverDescription;
+        private final OperationContext operationContext;
 
-        private SingleServerBindingConnectionSource() {
+        private SingleServerBindingConnectionSource(
+                final OperationContext operationContext) {
             SingleServerBinding.this.retain();
             ServerTuple serverTuple = cluster.selectServer(new ServerAddressSelector(serverAddress), operationContext);
-            serverDescription = serverTuple.getServerDescription();
+            this.serverDescription = serverTuple.getServerDescription();
+            this.operationContext = operationContext;
         }
 
         @Override
         public ServerDescription getServerDescription() {
             return serverDescription;
-        }
-
-        @Override
-        public OperationContext getOperationContext() {
-            return operationContext;
         }
 
         @Override
@@ -116,6 +114,11 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
         public ConnectionSource retain() {
             super.retain();
             return this;
+        }
+
+        @Override
+        public ConnectionSource withOperationContext(final OperationContext operationContext) {
+            return new SingleServerBindingConnectionSource(operationContext);
         }
 
         @Override

@@ -19,6 +19,7 @@ package com.mongodb.reactivestreams.client.internal;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.operation.AsyncReadOperation;
 
 class VoidReadOperationThenCursorReadOperation<T> implements AsyncReadOperation<AsyncBatchCursor<T>> {
@@ -40,7 +41,7 @@ class VoidReadOperationThenCursorReadOperation<T> implements AsyncReadOperation<
     }
 
     @Override
-    public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
+    public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
         readOperation.executeAsync(binding, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);

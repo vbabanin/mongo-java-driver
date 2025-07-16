@@ -28,7 +28,9 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryState;
 import com.mongodb.internal.binding.AsyncReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonBoolean;
@@ -285,18 +287,19 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
     }
 
     @Override
-    public BatchCursor<T> execute(final ReadBinding binding) {
+    public BatchCursor<T> execute(final ReadBinding binding, final OperationContext operationContext) {
         IllegalStateException invalidTimeoutModeException = invalidTimeoutModeException();
         if (invalidTimeoutModeException != null) {
             throw invalidTimeoutModeException;
         }
 
-        RetryState retryState = initialRetryState(retryReads,  binding.getOperationContext().getTimeoutContext());
-        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, binding.getOperationContext(), () ->
+        RetryState retryState = initialRetryState(retryReads,  operationContext.getTimeoutContext());
+        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, operationContext, () ->
             withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection) -> {
-                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), binding.getOperationContext()));
+
+                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContext));
                 try {
-                    return createReadCommandAndExecute(retryState, binding.getOperationContext(), source, namespace.getDatabaseName(),
+                    return createReadCommandAndExecute(retryState, operationContext, source, namespace.getDatabaseName(),
                                                        getCommandCreator(), CommandResultDocumentCodec.create(decoder, FIRST_BATCH),
                                                        transformer(), connection);
                 } catch (MongoCommandException e) {
@@ -308,25 +311,25 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
     }
 
     @Override
-    public void executeAsync(final AsyncReadBinding binding, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
+    public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
         IllegalStateException invalidTimeoutModeException = invalidTimeoutModeException();
         if (invalidTimeoutModeException != null) {
             callback.onResult(null, invalidTimeoutModeException);
             return;
         }
 
-        RetryState retryState = initialRetryState(retryReads,  binding.getOperationContext().getTimeoutContext());
+        RetryState retryState = initialRetryState(retryReads, operationContext.getTimeoutContext());
         binding.retain();
         AsyncCallbackSupplier<AsyncBatchCursor<T>> asyncRead = decorateReadWithRetriesAsync(
-                retryState, binding.getOperationContext(), (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
+                retryState, operationContext, (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
                     withAsyncSourceAndConnection(binding::getReadConnectionSource, false, funcCallback,
                             (source, connection, releasingCallback) -> {
                                 if (retryState.breakAndCompleteIfRetryAnd(() -> !canRetryRead(source.getServerDescription(),
-                                        binding.getOperationContext()), releasingCallback)) {
+                                        operationContext), releasingCallback)) {
                                     return;
                                 }
                                 SingleResultCallback<AsyncBatchCursor<T>> wrappedCallback = exceptionTransformingCallback(releasingCallback);
-                                createReadCommandAndExecuteAsync(retryState, binding.getOperationContext(), source,
+                                createReadCommandAndExecuteAsync(retryState, operationContext, source,
                                         namespace.getDatabaseName(), getCommandCreator(),
                                         CommandResultDocumentCodec.create(decoder, FIRST_BATCH),
                                         asyncTransformer(), connection, wrappedCallback);
@@ -468,15 +471,16 @@ public class FindOperation<T> implements AsyncExplainableReadOperation<AsyncBatc
         return timeoutMode;
     }
 
-    private CommandReadTransformer<BsonDocument, CommandBatchCursor<T>> transformer() {
-        return (result, source, connection) ->
-                new CommandBatchCursor<>(getTimeoutMode(), result, batchSize, getMaxTimeForCursor(source.getOperationContext()), decoder,
-                        comment, source, connection);
+    private CommandReadTransformer<BsonDocument, CommandBatchCursorNew<T>> transformer() {
+        return (result, source, connection, operationContext) ->
+                new CommandBatchCursorNew<>(getTimeoutMode(), operationContext, new CommandCoreCursor<>(
+                        result, batchSize, getMaxTimeForCursor(operationContext), decoder, comment, source, connection
+                ));
     }
 
     private CommandReadTransformerAsync<BsonDocument, AsyncBatchCursor<T>> asyncTransformer() {
-        return (result, source, connection) ->
-            new AsyncCommandBatchCursor<>(getTimeoutMode(), result, batchSize, getMaxTimeForCursor(source.getOperationContext()), decoder,
+        return (result, source, connection, operationContext) ->
+            new AsyncCommandBatchCursor<>(getTimeoutMode(), result, batchSize, getMaxTimeForCursor(operationContext), decoder,
                     comment, source, connection);
     }
 

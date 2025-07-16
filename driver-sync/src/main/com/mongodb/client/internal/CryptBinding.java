@@ -19,9 +19,14 @@ package com.mongodb.client.internal;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
+import com.mongodb.internal.binding.BindingContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 
@@ -61,8 +66,8 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return wrapped.getOperationContext();
+    public CryptBinding withOperationContext(final OperationContext operationContext) {
+        return null;
     }
 
     @Override
@@ -94,11 +99,6 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
         }
 
         @Override
-        public OperationContext getOperationContext() {
-            return wrapped.getOperationContext();
-        }
-
-        @Override
         public ReadPreference getReadPreference() {
             return wrapped.getReadPreference();
         }
@@ -117,6 +117,11 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
         public ConnectionSource retain() {
             wrapped.retain();
             return this;
+        }
+
+        @Override
+        public ConnectionSource withOperationContext(final OperationContext operationContext) {
+            return wrapped.withOperationContext(operationContext);
         }
 
         @Override

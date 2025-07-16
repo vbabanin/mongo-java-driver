@@ -69,6 +69,11 @@ public class SessionBinding implements ReadWriteBinding {
     }
 
     @Override
+    public BindingContext withOperationContext(final OperationContext operationContext) {
+        return null;
+    }
+
+    @Override
     public ConnectionSource getWriteConnectionSource() {
         return new SessionBindingConnectionSource(wrapped.getWriteConnectionSource());
     }
@@ -104,6 +109,11 @@ public class SessionBinding implements ReadWriteBinding {
         public ConnectionSource retain() {
             wrapped = wrapped.retain();
             return this;
+        }
+
+        @Override
+        public ConnectionSource withOperationContext(final OperationContext operationContext) {
+            return wrapped.withOperationContext(operationContext);
         }
 
         @Override

@@ -19,6 +19,7 @@ package com.mongodb.internal.binding;
 import com.mongodb.ReadPreference;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.Connection;
+import com.mongodb.internal.connection.OperationContext;
 
 /**
  * A source of connections to a single MongoDB server.
@@ -31,7 +32,7 @@ public interface ConnectionSource extends BindingContext, ReferenceCounted {
 
     ReadPreference getReadPreference();
 
-    Connection getConnection();
+    Connection getConnection(OperationContext operationContext);
 
     @Override
     ConnectionSource retain();

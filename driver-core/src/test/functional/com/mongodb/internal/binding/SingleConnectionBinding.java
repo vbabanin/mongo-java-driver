@@ -62,6 +62,20 @@ public class SingleConnectionBinding implements ReadWriteBinding {
         readConnection = readServerTuple.getServer().getConnection(operationContext);
     }
 
+    private SingleConnectionBinding(ReadPreference readPreference,
+                                    Connection readConnection,
+                                    Connection writeConnection,
+                                    ServerDescription readServerDescription,
+                                    ServerDescription writeServerDescription,
+                                    OperationContext operationContext) {
+        this.readPreference = readPreference;
+        this.readConnection = readConnection;
+        this.writeConnection = writeConnection;
+        this.readServerDescription = readServerDescription;
+        this.writeServerDescription = writeServerDescription;
+        this.operationContext = operationContext;
+    }
+
     @Override
     public int getCount() {
         return count;
@@ -95,7 +109,7 @@ public class SingleConnectionBinding implements ReadWriteBinding {
         if (readPreference == primary()) {
             return getWriteConnectionSource();
         } else {
-            return new SingleConnectionSource(readServerDescription, readConnection);
+            return new SingleConnectionSource(readServerDescription, readConnection, operationContext);
         }
     }
 
@@ -110,19 +124,29 @@ public class SingleConnectionBinding implements ReadWriteBinding {
     }
 
     @Override
+    public SingleConnectionBinding withOperationContext(final OperationContext operationContext) {
+        return new SingleConnectionBinding(readPreference, readConnection, writeConnection,
+                readServerDescription, writeServerDescription, operationContext);
+    }
+
+    @Override
     public ConnectionSource getWriteConnectionSource() {
         isTrue("open", getCount() > 0);
-        return new SingleConnectionSource(writeServerDescription, writeConnection);
+        return new SingleConnectionSource(writeServerDescription, writeConnection, operationContext);
     }
 
     private final class SingleConnectionSource implements ConnectionSource {
         private final ServerDescription serverDescription;
         private final Connection connection;
+        private final OperationContext operationContext;
         private int count = 1;
 
-        SingleConnectionSource(final ServerDescription serverDescription, final Connection connection) {
+        SingleConnectionSource(final ServerDescription serverDescription,
+                               final Connection connection,
+                               final OperationContext operationContext) {
             this.serverDescription = serverDescription;
             this.connection = connection;
+            this.operationContext = operationContext;
             SingleConnectionBinding.this.retain();
         }
 
@@ -156,6 +180,11 @@ public class SingleConnectionBinding implements ReadWriteBinding {
         public SingleConnectionSource retain() {
             count++;
             return this;
+        }
+
+        @Override
+        public ConnectionSource withOperationContext(final OperationContext operationContext) {
+            return new SingleConnectionSource(serverDescription, connection, operationContext);
         }
 
         @Override

@@ -16,6 +16,7 @@
 package com.mongodb.internal.mockito;
 
 import com.mongodb.internal.binding.ReadBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.operation.ListCollectionsOperation;
 import org.bson.BsonDocument;
 import org.bson.codecs.BsonDocumentCodec;

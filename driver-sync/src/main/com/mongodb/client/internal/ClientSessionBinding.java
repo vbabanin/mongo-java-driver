@@ -22,10 +22,15 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AbstractReferenceCounted;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ConnectionSource;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadWriteBinding;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.TransactionContext;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.session.ClientSessionContext;
@@ -44,14 +49,12 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
     private final ClusterAwareReadWriteBinding wrapped;
     private final ClientSession session;
     private final boolean ownsSession;
-    private final OperationContext operationContext;
 
     public ClientSessionBinding(final ClientSession session, final boolean ownsSession, final ClusterAwareReadWriteBinding wrapped) {
         this.wrapped = wrapped;
         wrapped.retain();
         this.session = notNull("session", session);
         this.ownsSession = ownsSession;
-        this.operationContext = wrapped.getOperationContext().withSessionContext(new SyncClientSessionContext(session));
     }
 
     @Override
@@ -99,8 +102,8 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
     }
 
     @Override
-    public OperationContext getOperationContext() {
-        return operationContext;
+    public ClientSessionBinding withOperationContext(final OperationContext operationContext) {
+        return null;
     }
 
     private ConnectionSource getConnectionSource(final Supplier<ConnectionSource> wrappedConnectionSourceSupplier) {
@@ -136,11 +139,6 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
         }
 
         @Override
-        public OperationContext getOperationContext() {
-            return operationContext;
-        }
-
-        @Override
         public ReadPreference getReadPreference() {
             return wrapped.getReadPreference();
         }
@@ -170,6 +168,11 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
         }
 
         @Override
+        public ConnectionSource withOperationContext(final OperationContext operationContext) {
+            return wrapped.withOperationContext(operationContext);
+        }
+
+        @Override
         public int getCount() {
             return wrapped.getCount();
         }
@@ -184,13 +187,15 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
         }
     }
 
-    private final class SyncClientSessionContext extends ClientSessionContext {
+    public static final class SyncClientSessionContext extends ClientSessionContext {
 
         private final ClientSession clientSession;
+        private final boolean ownsSession;
 
-        SyncClientSessionContext(final ClientSession clientSession) {
+        SyncClientSessionContext(final ClientSession clientSession, final boolean ownsSession) {
             super(clientSession);
             this.clientSession = clientSession;
+            this.ownsSession = ownsSession;
         }
 
         @Override
@@ -215,7 +220,9 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
             } else if (isSnapshot()) {
                 return ReadConcern.SNAPSHOT;
             } else {
-               return wrapped.getOperationContext().getSessionContext().getReadConcern();
+                //TODO what does this do? run the tests and put a breakpoint here
+                throw new RuntimeException("SyncClientSessionContext#getReadConcern UNEXPECTED, find this message in the codebase");
+                //return wrapped.getOperationContext().getSessionContext().getReadConcern();
             }
         }
     }
