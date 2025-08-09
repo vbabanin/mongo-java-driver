@@ -188,23 +188,25 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
         RetryState retryState = new RetryState(timeoutContext);
         BulkWriteTracker.attachNew(retryState, retryWrites, timeoutContext);
         Supplier<BulkWriteResult> retryingBulkWrite = decorateWriteWithRetries(retryState, operationContext, () ->
-            withSourceAndConnection(binding::getWriteConnectionSource, true, (source, connection) -> {
+            withSourceAndConnection(binding::getWriteConnectionSource, true, (source, connection, operationContextWithMinRTT) -> {
+                TimeoutContext timeoutContextWithMinRtt = operationContextWithMinRTT.getTimeoutContext();
                 ConnectionDescription connectionDescription = connection.getDescription();
                 // attach `maxWireVersion` ASAP because it is used to check whether we can retry
                 retryState.attach(AttachmentKeys.maxWireVersion(), connectionDescription.getMaxWireVersion(), true);
                 SessionContext sessionContext = operationContext.getSessionContext();
                 WriteConcern writeConcern = validateAndGetEffectiveWriteConcern(this.writeConcern, sessionContext);
                 if (!isRetryableWrite(retryWrites, writeConcern, connectionDescription, sessionContext)) {
-                    handleMongoWriteConcernWithResponseException(retryState, true, timeoutContext);
+                    handleMongoWriteConcernWithResponseException(retryState, true, timeoutContextWithMinRtt);
                 }
                 validateWriteRequests(connectionDescription, bypassDocumentValidation, writeRequests, writeConcern);
                 if (!retryState.attachment(AttachmentKeys.bulkWriteTracker()).orElseThrow(Assertions::fail).batch().isPresent()) {
                     BulkWriteTracker.attachNew(retryState, BulkWriteBatch.createBulkWriteBatch(namespace,
                             connectionDescription, ordered, writeConcern,
-                            bypassDocumentValidation, retryWrites, writeRequests, operationContext, comment, variables), timeoutContext);
+                                    bypassDocumentValidation, retryWrites, writeRequests, operationContextWithMinRTT, comment, variables),
+                            timeoutContextWithMinRtt);
                 }
-                return executeBulkWriteBatch(retryState, writeConcern, binding, operationContext, connection);
-            })
+                return executeBulkWriteBatch(retryState, writeConcern, binding, operationContextWithMinRTT, connection);
+            }, operationContext)
         );
         try {
             return retryingBulkWrite.get();
@@ -222,15 +224,17 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
         AsyncCallbackSupplier<BulkWriteResult> retryingBulkWrite = this.<BulkWriteResult>decorateWriteWithRetries(retryState,
                 operationContext,
                 funcCallback ->
-            withAsyncSourceAndConnection(binding::getWriteConnectionSource, true, funcCallback,
-                    (source, connection, releasingCallback) -> {
+            withAsyncSourceAndConnection(binding::getWriteConnectionSource, true, operationContext, funcCallback,
+                    (source, connection, operationContextWithMinRtt, releasingCallback) -> {
+                TimeoutContext timeoutContextWithMinRtt = operationContextWithMinRtt.getTimeoutContext();
                 ConnectionDescription connectionDescription = connection.getDescription();
+
                 // attach `maxWireVersion` ASAP because it is used to check whether we can retry
                 retryState.attach(AttachmentKeys.maxWireVersion(), connectionDescription.getMaxWireVersion(), true);
-                SessionContext sessionContext = operationContext.getSessionContext();
+                SessionContext sessionContext = operationContextWithMinRtt.getSessionContext();
                 WriteConcern writeConcern = validateAndGetEffectiveWriteConcern(this.writeConcern, sessionContext);
-                if (!isRetryableWrite(retryWrites, writeConcern, connectionDescription, sessionContext)
-                        && handleMongoWriteConcernWithResponseExceptionAsync(retryState, releasingCallback, timeoutContext)) {
+                        if (!isRetryableWrite(retryWrites, writeConcern, connectionDescription, sessionContext)
+                        && handleMongoWriteConcernWithResponseExceptionAsync(retryState, releasingCallback, timeoutContextWithMinRtt)) {
                     return;
                 }
                 if (validateWriteRequestsAndCompleteIfInvalid(connectionDescription, bypassDocumentValidation, writeRequests,
@@ -241,13 +245,13 @@ public class MixedBulkWriteOperation implements AsyncWriteOperation<BulkWriteRes
                     if (!retryState.attachment(AttachmentKeys.bulkWriteTracker()).orElseThrow(Assertions::fail).batch().isPresent()) {
                         BulkWriteTracker.attachNew(retryState, BulkWriteBatch.createBulkWriteBatch(namespace,
                                 connectionDescription, ordered, writeConcern,
-                                bypassDocumentValidation, retryWrites, writeRequests, operationContext, comment, variables), timeoutContext);
+                                bypassDocumentValidation, retryWrites, writeRequests, operationContextWithMinRtt, comment, variables), timeoutContextWithMinRtt);
                     }
                 } catch (Throwable t) {
                     releasingCallback.onResult(null, t);
                     return;
                 }
-                executeBulkWriteBatchAsync(retryState, writeConcern, binding, operationContext, connection, releasingCallback);
+                executeBulkWriteBatchAsync(retryState, writeConcern, binding, operationContextWithMinRtt, connection, releasingCallback);
             })
         ).whenComplete(binding::release);
         retryingBulkWrite.get(exceptionTransformingCallback(errorHandlingCallback(callback, LOGGER)));

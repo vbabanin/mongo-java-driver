@@ -24,6 +24,7 @@ import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.connection.ReadConcernAwareNoOpSessionContext;
 import com.mongodb.internal.connection.Server;
 import com.mongodb.internal.connection.ServerTuple;
 import com.mongodb.internal.selector.ReadPreferenceServerSelector;
@@ -32,7 +33,6 @@ import com.mongodb.internal.selector.ServerAddressSelector;
 import com.mongodb.internal.selector.WritableServerSelector;
 
 import static com.mongodb.assertions.Assertions.notNull;
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * A simple ReadWriteBinding implementation that supplies write connection sources bound to a possibly different primary each time, and a
@@ -43,19 +43,15 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 public class ClusterBinding extends AbstractReferenceCounted implements ClusterAwareReadWriteBinding {
     private final Cluster cluster;
     private final ReadPreference readPreference;
-    private final ReadConcern readConcern;
-    private OperationContext operationContext;
 
     /**
      * Creates an instance.
      * @param cluster          a non-null Cluster which will be used to select a server to bind to
      * @param readPreference   a non-null ReadPreference for read operations
-     * @param readConcern      a non-null read concern
      */
-    public ClusterBinding(final Cluster cluster, final ReadPreference readPreference, final ReadConcern readConcern) {
+    public ClusterBinding(final Cluster cluster, final ReadPreference readPreference) {
         this.cluster = notNull("cluster", cluster);
         this.readPreference = notNull("readPreference", readPreference);
-        this.readConcern = notNull("readConcern", readConcern);
     }
 
     @Override
@@ -77,7 +73,8 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
     }
 
     @Override
-    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference, OperationContext operationContext) {
+    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference,
+                                                    final OperationContext operationContext) {
         // Assume 5.0+ for load-balanced mode
         if (cluster.getSettings().getMode() == ClusterConnectionMode.LOAD_BALANCED) {
             return getReadConnectionSource(operationContext);
@@ -113,7 +110,8 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
             this.server = serverTuple.getServer();
             this.serverDescription = serverTuple.getServerDescription();
             this.appliedReadPreference = appliedReadPreference;
-            operationContext.getTimeoutContext().minRoundTripTimeMS(NANOSECONDS.toMillis(serverDescription.getMinRoundTripTimeNanos()));
+            //TODO THis has to be moved outside of the consutructor to the place where getConnectionSource is called to create a new OperationContet to use further
+            // operationContext.getTimeoutContext().minRoundTripTimeMS(NANOSECONDS.toMillis(serverDescription.getMinRoundTripTimeNanos()));
             ClusterBinding.this.retain();
         }
 
@@ -129,7 +127,11 @@ public class ClusterBinding extends AbstractReferenceCounted implements ClusterA
 
         @Override
         public Connection getConnection(final OperationContext operationContext) {
-            return server.getConnection(operationContext);
+            // The first read in a causally consistent session MUST not send afterClusterTime to the server
+            // (because the operationTime has not yet been determined). Therefore, we use ReadConcernAwareNoOpSessionContext to
+            // so that we do not advance clusterTime on ClientSession in given operationContext because it might not be yet set.
+            ReadConcern readConcern = operationContext.getSessionContext().getReadConcern();
+            return server.getConnection(operationContext.withSessionContext(new ReadConcernAwareNoOpSessionContext(readConcern)));
         }
 
         public ConnectionSource retain() {

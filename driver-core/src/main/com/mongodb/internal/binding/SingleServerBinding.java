@@ -35,23 +35,21 @@ import static com.mongodb.assertions.Assertions.notNull;
 public class SingleServerBinding extends AbstractReferenceCounted implements ReadWriteBinding {
     private final Cluster cluster;
     private final ServerAddress serverAddress;
-    private final OperationContext operationContext;
 
     /**
      * Creates an instance, defaulting to {@link com.mongodb.ReadPreference#primary()} for reads.
      * @param cluster       a non-null  Cluster which will be used to select a server to bind to
      * @param serverAddress a non-null  address of the server to bind to
-     * @param operationContext the operation context
      */
-    public SingleServerBinding(final Cluster cluster, final ServerAddress serverAddress, final OperationContext operationContext) {
+    public SingleServerBinding(final Cluster cluster, final ServerAddress serverAddress) {
         this.cluster = notNull("cluster", cluster);
         this.serverAddress = notNull("serverAddress", serverAddress);
-        this.operationContext = notNull("operationContext", operationContext);
     }
 
     @Override
-    public ConnectionSource getWriteConnectionSource() {
-        return new SingleServerBindingConnectionSource(operationContext);
+    public ConnectionSource getWriteConnectionSource(final OperationContext operationContext) {
+        ServerTuple serverTuple = cluster.selectServer(new ServerAddressSelector(serverAddress), operationContext);
+        return new SingleServerBindingConnectionSource(serverTuple);
     }
 
     @Override
@@ -60,18 +58,15 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
     }
 
     @Override
-    public ConnectionSource getReadConnectionSource() {
-        return new SingleServerBindingConnectionSource(operationContext);
+    public ConnectionSource getReadConnectionSource(final OperationContext operationContext) {
+        ServerTuple serverTuple = cluster.selectServer(new ServerAddressSelector(serverAddress), operationContext);
+        return new SingleServerBindingConnectionSource(serverTuple);
     }
 
     @Override
-    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference) {
+    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference,
+                                                    final OperationContext operationContext) {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public SingleServerBinding withOperationContext(final OperationContext operationContext) {
-        return new SingleServerBinding(cluster, serverAddress, operationContext);
     }
 
     @Override
@@ -82,14 +77,10 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
 
     private final class SingleServerBindingConnectionSource extends AbstractReferenceCounted implements ConnectionSource {
         private final ServerDescription serverDescription;
-        private final OperationContext operationContext;
 
-        private SingleServerBindingConnectionSource(
-                final OperationContext operationContext) {
+        private SingleServerBindingConnectionSource(final ServerTuple serverTuple) {
             SingleServerBinding.this.retain();
-            ServerTuple serverTuple = cluster.selectServer(new ServerAddressSelector(serverAddress), operationContext);
             this.serverDescription = serverTuple.getServerDescription();
-            this.operationContext = operationContext;
         }
 
         @Override
@@ -103,7 +94,7 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
         }
 
         @Override
-        public Connection getConnection() {
+        public Connection getConnection(final OperationContext operationContext) {
             return cluster
                     .selectServer(new ServerAddressSelector(serverAddress), operationContext)
                     .getServer()
@@ -114,11 +105,6 @@ public class SingleServerBinding extends AbstractReferenceCounted implements Rea
         public ConnectionSource retain() {
             super.retain();
             return this;
-        }
-
-        @Override
-        public ConnectionSource withOperationContext(final OperationContext operationContext) {
-            return new SingleServerBindingConnectionSource(operationContext);
         }
 
         @Override

@@ -70,12 +70,10 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
     private CommandCursorResult<T> commandCursorResult;
     @Nullable
     private List<T> nextBatch;
-    private boolean resetTimeoutWhenClosing;
 
     CommandCoreCursor(
             final BsonDocument commandCursorDocument,
             final int batchSize,
-            final long maxTimeMS,
             final Decoder<T> decoder,
             @Nullable final BsonValue comment,
             final ConnectionSource connectionSource,
@@ -89,21 +87,17 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
         this.maxWireVersion = connectionDescription.getMaxWireVersion();
         this.firstBatchEmpty = commandCursorResult.getResults().isEmpty();
 
-//        operationContext = connectionSource.getOperationContext();
-//        operationContext.getOperationContext().setMaxTimeOverride(maxTimeMS); // TODO-JAVA-5640 with?
-
         Connection connectionToPin = connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER ? connection : null;
         resourceManager = new ResourceManager(namespace, connectionSource, connectionToPin, commandCursorResult.getServerCursor());
-        resetTimeoutWhenClosing = true;
     }
 
     @Override
-    public boolean hasNext(OperationContext operationContext) {
+    public boolean hasNext(final OperationContext operationContext) {
         return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_CURSOR, () -> doHasNext(operationContext), operationContext));
     }
 
 
-    private boolean doHasNext(OperationContext operationContext) {
+    private boolean doHasNext(final OperationContext operationContext) {
         if (nextBatch != null) {
             return true;
         }
@@ -122,7 +116,7 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
     }
 
     @Override
-    public List<T> next(OperationContext operationContext) {
+    public List<T> next(final OperationContext operationContext) {
         return assertNotNull(resourceManager.execute(MESSAGE_IF_CLOSED_AS_ITERATOR, () -> doNext(operationContext), operationContext));
     }
 
@@ -132,7 +126,7 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
     }
 
     @Nullable
-    private List<T> doNext(OperationContext operationContext) {
+    private List<T> doNext(final OperationContext operationContext) {
         if (!doHasNext(operationContext)) {
             throw new NoSuchElementException();
         }
@@ -159,13 +153,13 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
 
 
     @Override
-    public void close(OperationContext operationContext) {
+    public void close(final OperationContext operationContext) {
         resourceManager.close(operationContext);
     }
 
     @Nullable
     @Override
-    public List<T> tryNext(OperationContext operationContext) {
+    public List<T> tryNext(final OperationContext operationContext) {
         return resourceManager.execute(MESSAGE_IF_CLOSED_AS_CURSOR, () -> {
             if (!tryHasNext(operationContext)) {
                 return null;
@@ -174,7 +168,7 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
         }, operationContext);
     }
 
-    private boolean tryHasNext(OperationContext operationContext) {
+    private boolean tryHasNext(final OperationContext operationContext) {
         if (nextBatch != null) {
             return true;
         }
@@ -224,13 +218,11 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
         return maxWireVersion;
     }
 
-    private void getMore(OperationContext operationContext) {
+    private void getMore(final OperationContext operationContext) {
         ServerCursor serverCursor = assertNotNull(resourceManager.getServerCursor());
         resourceManager.executeWithConnection(connection -> {
             ServerCursor nextServerCursor;
             try {
-                //TODO, what we should do wit release?
-                ConnectionSource connectionSource = getConnectionSource(operationContext);
                 this.commandCursorResult = toCommandCursorResult(connection.getDescription().getServerAddress(), NEXT_BATCH,
                         assertNotNull(
                                 connection.command(namespace.getDatabaseName(),
@@ -239,21 +231,13 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
                                         NoOpFieldNameValidator.INSTANCE,
                                         ReadPreference.primary(),
                                         CommandResultDocumentCodec.create(decoder, NEXT_BATCH),
-                                        connectionSource.getOperationContext())));
+                                        operationContext)));
                 nextServerCursor = commandCursorResult.getServerCursor();
             } catch (MongoCommandException e) {
                 throw translateCommandException(e, serverCursor);
             }
             resourceManager.setServerCursor(nextServerCursor);
         }, operationContext);
-    }
-
-    private ConnectionSource getConnectionSource(final OperationContext operationContext) {
-        ConnectionSource connectionSource = assertNotNull(resourceManager.getConnectionSource());
-        //FIXME
-//        connectionSource =
-//                connectionSource.withOperationContext(connectionSource.withOperationContext(operationContext));
-        return connectionSource;
     }
 
     private CommandCursorResult<T> toCommandCursorResult(final ServerAddress serverAddress, final String fieldNameContainingBatch,
@@ -280,7 +264,7 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
          * Thread-safe.
          */
         @Nullable
-        <R> R execute(final String exceptionMessageIfClosed, final Supplier<R> operation, OperationContext operationContext)
+        <R> R execute(final String exceptionMessageIfClosed, final Supplier<R> operation, final OperationContext operationContext)
                 throws IllegalStateException {
             if (!tryStartOperation()) {
                 throw new IllegalStateException(exceptionMessageIfClosed);
@@ -298,14 +282,8 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
         }
 
         @Override
-        void doClose(OperationContext operationContext) {
-            OperationContext resetedTImeoutContext = operationContext.withNewlyStartedTimeout();
-
-            if (resetTimeoutWhenClosing) { // TODO-JAVA-5640 don't we always reset when closing?
+        void doClose(final OperationContext operationContext) {
                 releaseResources(operationContext);
-            } else {
-                releaseResources(operationContext);
-            }
         }
 
         private void releaseResources(final OperationContext operationContext) {
@@ -348,11 +326,11 @@ class CommandCoreCursor<T> implements CoreCursor<T> {
             }
         }
 
-        private Connection getConnection(OperationContext operationContext) {
+        private Connection getConnection(final OperationContext operationContext) {
             assertTrue(getState() != State.IDLE);
             Connection pinnedConnection = getPinnedConnection();
             if (pinnedConnection == null) {
-                return assertNotNull(getConnectionSource()).getConnection();
+                return assertNotNull(getConnectionSource()).getConnection(operationContext);
             } else {
                 return pinnedConnection.retain();
             }

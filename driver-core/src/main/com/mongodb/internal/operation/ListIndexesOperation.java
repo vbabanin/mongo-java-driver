@@ -23,11 +23,8 @@ import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryState;
-import com.mongodb.internal.binding.AsyncReadBinding; import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
+import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.binding.ReadBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -53,7 +50,7 @@ import static com.mongodb.internal.operation.CommandOperationHelper.rethrowIfNot
 import static com.mongodb.internal.operation.CursorHelper.getCursorDocumentFromBatchSize;
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
-import static com.mongodb.internal.operation.OperationHelper.setNonTailableCursorMaxTimeSupplier;
+import static com.mongodb.internal.operation.OperationHelper.applyTimeoutModeToOperationContext;
 import static com.mongodb.internal.operation.OperationHelper.canRetryRead;
 import static com.mongodb.internal.operation.SingleBatchCursor.createEmptySingleBatchCursor;
 import static com.mongodb.internal.operation.SyncOperationHelper.CommandReadTransformer;
@@ -122,35 +119,39 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
 
     @Override
     public BatchCursor<T> execute(final ReadBinding binding, final OperationContext operationContext) {
-        RetryState retryState = initialRetryState(retryReads, operationContext.getTimeoutContext());
-        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, operationContext, () ->
-            withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection) -> {
-                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContext));
+        OperationContext listIndexesOperationContext = applyTimeoutModeToOperationContext(timeoutMode, operationContext);
+
+        RetryState retryState = initialRetryState(retryReads, listIndexesOperationContext.getTimeoutContext());
+        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, listIndexesOperationContext, () ->
+            withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection, operationContextWithMinRTT) -> {
+                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContextWithMinRTT));
                 try {
-                    return createReadCommandAndExecute(retryState, operationContext, source, namespace.getDatabaseName(),
+                    return createReadCommandAndExecute(retryState, operationContextWithMinRTT, source, namespace.getDatabaseName(),
                                                        getCommandCreator(), createCommandDecoder(), transformer(), connection);
                 } catch (MongoCommandException e) {
                     return rethrowIfNotNamespaceError(e,
                             createEmptySingleBatchCursor(source.getServerDescription().getAddress(), batchSize));
                 }
-            })
+            }, listIndexesOperationContext)
         );
         return read.get();
     }
 
     @Override
     public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
+        OperationContext listIndexesOperationContext = applyTimeoutModeToOperationContext(timeoutMode, operationContext);
+
         RetryState retryState = initialRetryState(retryReads, operationContext.getTimeoutContext());
         binding.retain();
         AsyncCallbackSupplier<AsyncBatchCursor<T>> asyncRead = decorateReadWithRetriesAsync(
-                retryState, operationContext, (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
-                    withAsyncSourceAndConnection(binding::getReadConnectionSource, false, funcCallback,
-                            (source, connection, releasingCallback) -> {
+                retryState, listIndexesOperationContext, (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
+                    withAsyncSourceAndConnection(binding::getReadConnectionSource, false, listIndexesOperationContext, funcCallback,
+                            (source, connection, operationContextWithMinRtt, releasingCallback) -> {
                                 if (retryState.breakAndCompleteIfRetryAnd(() -> !canRetryRead(source.getServerDescription(),
-                                        operationContext), releasingCallback)) {
+                                        operationContextWithMinRtt), releasingCallback)) {
                                     return;
                                 }
-                                createReadCommandAndExecuteAsync(retryState, operationContext, source,
+                                createReadCommandAndExecuteAsync(retryState, operationContextWithMinRtt, source,
                                         namespace.getDatabaseName(), getCommandCreator(), createCommandDecoder(),
                                         asyncTransformer(), connection,
                                         (result, t) -> {
@@ -171,7 +172,6 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
         return (operationContext, serverDescription, connectionDescription) -> {
             BsonDocument commandDocument = new BsonDocument("listIndexes", new BsonString(namespace.getCollectionName()))
                     .append("cursor", getCursorDocumentFromBatchSize(batchSize == 0 ? null : batchSize));
-            setNonTailableCursorMaxTimeSupplier(timeoutMode, operationContext);
             putIfNotNull(commandDocument, "comment", comment);
             return commandDocument;
         };
@@ -184,7 +184,7 @@ public class ListIndexesOperation<T> implements AsyncReadOperation<AsyncBatchCur
 
     private CommandReadTransformerAsync<BsonDocument, AsyncBatchCursor<T>> asyncTransformer() {
         return (result, source, connection, operationContext) ->
-                cursorDocumentToAsyncBatchCursor(timeoutMode, result, batchSize, decoder, comment, source, connection);
+                cursorDocumentToAsyncBatchCursor(timeoutMode, result, batchSize, decoder, comment, source, connection, operationContext);
     }
 
     private Codec<BsonDocument> createCommandDecoder() {

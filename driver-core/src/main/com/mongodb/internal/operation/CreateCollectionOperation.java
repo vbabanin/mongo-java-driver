@@ -28,12 +28,9 @@ import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.AsyncConnection;
+import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonBoolean;
@@ -237,11 +234,11 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
 
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
-        return withConnection(binding, connection -> {
+        return withConnection(binding, operationContext, (connection, operationContextWithMinRtt)-> {
             checkEncryptedFieldsSupported(connection.getDescription());
             getCommandFunctions().forEach(commandCreator ->
-               executeCommand(binding, operationContext,  databaseName, commandCreator.get(), connection,
-                      writeConcernErrorTransformer(operationContext.getTimeoutContext()))
+               executeCommand(binding, operationContextWithMinRtt,  databaseName, commandCreator.get(), connection,
+                      writeConcernErrorTransformer(operationContextWithMinRtt.getTimeoutContext()))
             );
             return null;
         });
@@ -249,7 +246,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
 
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
-        withAsyncConnection(binding, (connection, t) -> {
+        withAsyncConnection(binding, operationContext, (connection, operationContextWithMinRtt, t) -> {
             SingleResultCallback<Void> errHandlingCallback = errorHandlingCallback(callback, LOGGER);
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
@@ -258,7 +255,7 @@ public class CreateCollectionOperation implements AsyncWriteOperation<Void>, Wri
                 if (!checkEncryptedFieldsSupported(connection.getDescription(), releasingCallback)) {
                     return;
                 }
-                new ProcessCommandsCallback(binding, operationContext, connection, releasingCallback)
+                new ProcessCommandsCallback(binding, operationContextWithMinRtt, connection, releasingCallback)
                         .onResult(null, null);
             }
         });

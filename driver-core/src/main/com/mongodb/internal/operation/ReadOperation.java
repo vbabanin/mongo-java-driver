@@ -18,8 +18,6 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.internal.binding.ReadBinding;
 import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 
 /**
  * An operation that reads from a MongoDB server.

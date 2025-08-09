@@ -24,11 +24,7 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryState;
 import com.mongodb.internal.binding.AsyncReadBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
 import org.bson.BsonDocument;
@@ -56,8 +52,8 @@ import static com.mongodb.internal.operation.CursorHelper.getCursorDocumentFromB
 import static com.mongodb.internal.operation.DocumentHelper.putIfNotNull;
 import static com.mongodb.internal.operation.DocumentHelper.putIfTrue;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
+import static com.mongodb.internal.operation.OperationHelper.applyTimeoutModeToOperationContext;
 import static com.mongodb.internal.operation.OperationHelper.canRetryRead;
-import static com.mongodb.internal.operation.OperationHelper.setNonTailableCursorMaxTimeSupplier;
 import static com.mongodb.internal.operation.SingleBatchCursor.createEmptySingleBatchCursor;
 import static com.mongodb.internal.operation.SyncOperationHelper.CommandReadTransformer;
 import static com.mongodb.internal.operation.SyncOperationHelper.createReadCommandAndExecute;
@@ -164,18 +160,20 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
 
     @Override
     public BatchCursor<T> execute(final ReadBinding binding, final OperationContext operationContext) {
-        RetryState retryState = initialRetryState(retryReads, operationContext.getTimeoutContext());
-        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, operationContext, () ->
-            withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection) -> {
-                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContext));
+        OperationContext listCollectionsOperationContext = applyTimeoutModeToOperationContext(timeoutMode, operationContext);
+
+        RetryState retryState = initialRetryState(retryReads, listCollectionsOperationContext.getTimeoutContext());
+        Supplier<BatchCursor<T>> read = decorateReadWithRetries(retryState, listCollectionsOperationContext, () ->
+            withSourceAndConnection(binding::getReadConnectionSource, false, (source, connection, operationContextWithMinRTT) -> {
+                retryState.breakAndThrowIfRetryAnd(() -> !canRetryRead(source.getServerDescription(), operationContextWithMinRTT));
                 try {
-                    return createReadCommandAndExecute(retryState, operationContext, source, databaseName,
+                    return createReadCommandAndExecute(retryState, operationContextWithMinRTT, source, databaseName,
                                                        getCommandCreator(), createCommandDecoder(), transformer(), connection);
                 } catch (MongoCommandException e) {
                     return rethrowIfNotNamespaceError(e,
                             createEmptySingleBatchCursor(source.getServerDescription().getAddress(), batchSize));
                 }
-            })
+            }, listCollectionsOperationContext)
         );
         return read.get();
     }
@@ -183,17 +181,19 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
     @Override
     public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext,
                              final SingleResultCallback<AsyncBatchCursor<T>> callback) {
-        RetryState retryState = initialRetryState(retryReads, operationContext.getTimeoutContext());
+        OperationContext listCollectionsOperationContext = applyTimeoutModeToOperationContext(timeoutMode, operationContext);
+
+        RetryState retryState = initialRetryState(retryReads, listCollectionsOperationContext.getTimeoutContext());
         binding.retain();
         AsyncCallbackSupplier<AsyncBatchCursor<T>> asyncRead = decorateReadWithRetriesAsync(
-                retryState, operationContext, (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
-                    withAsyncSourceAndConnection(binding::getReadConnectionSource, false, funcCallback,
-                            (source, connection, releasingCallback) -> {
+                retryState, listCollectionsOperationContext, (AsyncCallbackSupplier<AsyncBatchCursor<T>>) funcCallback ->
+                    withAsyncSourceAndConnection(binding::getReadConnectionSource, false, listCollectionsOperationContext, funcCallback,
+                            (source, connection, operationContextWithMinRtt, releasingCallback) -> {
                                 if (retryState.breakAndCompleteIfRetryAnd(() -> !canRetryRead(source.getServerDescription(),
-                                        operationContext), releasingCallback)) {
+                                        operationContextWithMinRtt), releasingCallback)) {
                                     return;
                                 }
-                                createReadCommandAndExecuteAsync(retryState, operationContext, source, databaseName,
+                                createReadCommandAndExecuteAsync(retryState, operationContextWithMinRtt, source, databaseName,
                                                                  getCommandCreator(), createCommandDecoder(), asyncTransformer(), connection,
                                         (result, t) -> {
                                             if (t != null && !isNamespaceError(t)) {
@@ -215,7 +215,7 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
 
     private CommandReadTransformerAsync<BsonDocument, AsyncBatchCursor<T>> asyncTransformer() {
         return (result, source, connection, operationContext) ->
-                cursorDocumentToAsyncBatchCursor(timeoutMode, result, batchSize, decoder, comment, source, connection);
+                cursorDocumentToAsyncBatchCursor(timeoutMode, result, batchSize, decoder, comment, source, connection, operationContext);
     }
 
 
@@ -226,7 +226,6 @@ public class ListCollectionsOperation<T> implements AsyncReadOperation<AsyncBatc
             putIfNotNull(commandDocument, "filter", filter);
             putIfTrue(commandDocument, "nameOnly", nameOnly);
             putIfTrue(commandDocument, "authorizedCollections", authorizedCollections);
-            setNonTailableCursorMaxTimeSupplier(timeoutMode, operationContext);
             putIfNotNull(commandDocument, "comment", comment);
             return commandDocument;
         };

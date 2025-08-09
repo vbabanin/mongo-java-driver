@@ -21,7 +21,6 @@ import com.mongodb.MongoSocketException;
 import com.mongodb.ServerCursor;
 import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.internal.binding.ReferenceCounted;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.lang.Nullable;
 

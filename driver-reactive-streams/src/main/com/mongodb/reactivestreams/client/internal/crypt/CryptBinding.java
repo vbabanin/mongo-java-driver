@@ -21,11 +21,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncClusterAwareReadWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.binding.BindingContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.OperationContext;
 
@@ -48,8 +44,8 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
     }
 
     @Override
-    public void getWriteConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
-        wrapped.getWriteConnectionSource((result, t) -> {
+    public void getWriteConnectionSource(final OperationContext operationContext, final SingleResultCallback<AsyncConnectionSource> callback) {
+        wrapped.getWriteConnectionSource(operationContext, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
@@ -59,8 +55,8 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
     }
 
     @Override
-    public void getReadConnectionSource(final SingleResultCallback<AsyncConnectionSource> callback) {
-        wrapped.getReadConnectionSource((result, t) -> {
+    public void getReadConnectionSource(final OperationContext operationContext, final SingleResultCallback<AsyncConnectionSource> callback) {
+        wrapped.getReadConnectionSource(operationContext, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
@@ -71,8 +67,9 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
 
     @Override
     public void getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference,
+                                        final OperationContext operationContext,
             final SingleResultCallback<AsyncConnectionSource> callback) {
-        wrapped.getReadConnectionSource(minWireVersion, fallbackReadPreference, (result, t) -> {
+        wrapped.getReadConnectionSource(minWireVersion, fallbackReadPreference, operationContext, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
@@ -83,8 +80,10 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
 
 
     @Override
-    public void getConnectionSource(final ServerAddress serverAddress, final SingleResultCallback<AsyncConnectionSource> callback) {
-        wrapped.getConnectionSource(serverAddress, (result, t) -> {
+    public void getConnectionSource(final ServerAddress serverAddress,
+                                    final OperationContext operationContext,
+                                    final SingleResultCallback<AsyncConnectionSource> callback) {
+        wrapped.getConnectionSource(serverAddress, operationContext, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
@@ -109,10 +108,6 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         return wrapped.release();
     }
 
-    @Override
-    public BindingContext withOperationContext(final OperationContext operationContext) {
-        return null;
-    }
 
     private class CryptConnectionSource implements AsyncConnectionSource {
         private final AsyncConnectionSource wrapped;
@@ -133,8 +128,8 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         }
 
         @Override
-        public void getConnection(final SingleResultCallback<AsyncConnection> callback) {
-            wrapped.getConnection((result, t) -> {
+        public void getConnection(final OperationContext operationContext, final SingleResultCallback<AsyncConnection> callback) {
+            wrapped.getConnection(operationContext, (result, t) -> {
                 if (t != null) {
                     callback.onResult(null, t);
                 } else {
@@ -157,11 +152,6 @@ public class CryptBinding implements AsyncClusterAwareReadWriteBinding {
         @Override
         public int release() {
             return wrapped.release();
-        }
-
-        @Override
-        public BindingContext withOperationContext(final OperationContext operationContext) {
-            return null;
         }
     }
 }

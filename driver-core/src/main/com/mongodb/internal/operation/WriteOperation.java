@@ -18,8 +18,6 @@ package com.mongodb.internal.operation;
 
 import com.mongodb.internal.binding.WriteBinding;
 import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 
 /**
  * An operation which writes to a MongoDB server.

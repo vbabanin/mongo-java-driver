@@ -47,11 +47,11 @@ abstract class AbstractWriteSearchIndexOperation implements AsyncWriteOperation<
 
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
-        return withConnection(binding, connection -> {
+        return withConnection(binding, operationContext, (connection, operationContextWithMinRtt) -> {
             try {
-                executeCommand(binding, operationContext, namespace.getDatabaseName(), buildCommand(),
+                executeCommand(binding, operationContextWithMinRtt, namespace.getDatabaseName(), buildCommand(),
                         connection,
-                        writeConcernErrorTransformer(operationContext.getTimeoutContext()));
+                        writeConcernErrorTransformer(operationContextWithMinRtt.getTimeoutContext()));
             } catch (MongoCommandException mongoCommandException) {
                 swallowOrThrow(mongoCommandException);
             }
@@ -61,19 +61,20 @@ abstract class AbstractWriteSearchIndexOperation implements AsyncWriteOperation<
 
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
-        withAsyncSourceAndConnection(binding::getWriteConnectionSource, false, callback,
-                (connectionSource, connection, cb) ->
-                        executeCommandAsync(binding, operationContext,  namespace.getDatabaseName(), buildCommand(), connection,
-                                writeConcernErrorTransformerAsync(operationContext.getTimeoutContext()), (result, commandExecutionError) -> {
+        withAsyncSourceAndConnection(binding::getWriteConnectionSource, false, operationContext, callback,
+                (connectionSource, connection, operationContextWithMinRtt, cb) ->
+                        executeCommandAsync(binding, operationContextWithMinRtt,  namespace.getDatabaseName(), buildCommand(), connection,
+                                writeConcernErrorTransformerAsync(operationContextWithMinRtt.getTimeoutContext()), (result, commandExecutionError) -> {
                                     try {
                                         swallowOrThrow(commandExecutionError);
+                                        //TODO why call callback and not cb?
                                         callback.onResult(result, null);
                                     } catch (Throwable mongoCommandException) {
+                                        //TODO why call callback and not cb?
                                         callback.onResult(null, mongoCommandException);
                                     }
                                 }
-                        )
-        );
+                        ));
     }
 
     /**

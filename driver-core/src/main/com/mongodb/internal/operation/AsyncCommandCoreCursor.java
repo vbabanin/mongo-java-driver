@@ -26,16 +26,11 @@ import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.ServerCursor;
 import com.mongodb.annotations.ThreadSafe;
-import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerType;
-import com.mongodb.internal.TimeoutContext;
-import com.mongodb.internal.VisibleForTesting;
-import com.mongodb.internal.async.AsyncAggregateResponseBatchCursor;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.binding.AsyncConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.AsyncConnection;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
@@ -77,12 +72,10 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
     private final AtomicBoolean processedInitial = new AtomicBoolean();
     private int batchSize;
     private volatile CommandCursorResult<T> commandCursorResult;
-    private boolean resetTimeoutWhenClosing;
 
     AsyncCommandCoreCursor(
             final BsonDocument commandCursorDocument,
             final int batchSize,
-            final long maxTimeMS,
             final Decoder<T> decoder,
             @Nullable final BsonValue comment,
             final AsyncConnectionSource connectionSource,
@@ -95,14 +88,9 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
         this.comment = comment;
         this.maxWireVersion = connectionDescription.getMaxWireVersion();
         this.firstBatchEmpty = commandCursorResult.getResults().isEmpty();
-
-        //TODO
-        //operationContext.getTimeoutContext().setMaxTimeOverride(maxTimeMS); // TODO-JAVA-5640 with?
-
         AsyncConnection connectionToPin = connectionSource.getServerDescription().getType() == ServerType.LOAD_BALANCER
                 ? connection : null;
         resourceManager = new ResourceManager(namespace, connectionSource, connectionToPin, commandCursorResult.getServerCursor());
-        resetTimeoutWhenClosing = true;
     }
 
     @Override
@@ -174,7 +162,7 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
     }
 
     private void getMore(final ServerCursor cursor, final OperationContext operationContext, final SingleResultCallback<List<T>> callback) {
-        resourceManager.executeWithConnection((connection, wrappedCallback) ->
+        resourceManager.executeWithConnection(operationContext, (connection, wrappedCallback) ->
                 getMoreLoop(assertNotNull(connection), cursor, operationContext, wrappedCallback), callback);
     }
 
@@ -259,13 +247,7 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
 
         @Override
         void doClose(final OperationContext operationContext) {
-            TimeoutContext timeoutContext = operationContext.getTimeoutContext();
-            timeoutContext.resetToDefaultMaxTime();
-            if (resetTimeoutWhenClosing) {
-                releaseResourcesAsync(operationContext.withNewlyStartedTimeout(), THEN_DO_NOTHING);
-            } else {
                 releaseResourcesAsync(operationContext, THEN_DO_NOTHING);
-            }
         }
 
         private void releaseResourcesAsync(final OperationContext operationContext, final SingleResultCallback<Void> callback) {
@@ -275,7 +257,7 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
                 }
                 if (super.getServerCursor() != null) {
                     beginAsync().<AsyncConnection>thenSupply(c2 -> {
-                        getConnection(c2);
+                        getConnection(operationContext, c2);
                     }).thenConsume((connection, c3) -> {
                         beginAsync().thenRun(c4 -> {
                             releaseServerResourcesAsync(connection, operationContext, c4);
@@ -295,8 +277,9 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
             }, callback);
         }
 
-        <R> void executeWithConnection(final AsyncCallableConnectionWithCallback<R> callable, final SingleResultCallback<R> callback) {
-            getConnection((connection, t) -> {
+        <R> void executeWithConnection(final OperationContext operationContext, final AsyncCallableConnectionWithCallback<R> callable,
+                                       final SingleResultCallback<R> callback) {
+            getConnection(operationContext, (connection, t) -> {
                 if (t != null) {
                     callback.onResult(null, t);
                     return;
@@ -319,13 +302,13 @@ class AsyncCommandCoreCursor<T> implements AsyncCoreCursor<T> {
             }
         }
 
-        private void getConnection(final SingleResultCallback<AsyncConnection> callback) {
+        private void getConnection(final OperationContext operationContext, final SingleResultCallback<AsyncConnection> callback) {
             assertTrue(getState() != State.IDLE);
             AsyncConnection pinnedConnection = getPinnedConnection();
             if (pinnedConnection != null) {
                 callback.onResult(assertNotNull(pinnedConnection).retain(), null);
             } else {
-                assertNotNull(getConnectionSource()).getConnection(callback);
+                assertNotNull(getConnectionSource()).getConnection(operationContext, callback);
             }
         }
 

@@ -21,7 +21,6 @@ import com.mongodb.MongoTimeoutException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
 import com.mongodb.internal.binding.AsyncConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.selector.ServerAddressSelector;
 
 import static com.mongodb.ClusterFixture.OPERATION_CONTEXT;

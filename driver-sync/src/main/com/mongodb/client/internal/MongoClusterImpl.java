@@ -39,22 +39,15 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.SynchronousContextProvider;
 import com.mongodb.client.model.bulk.ClientBulkWriteOptions;
-import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
+import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
 import com.mongodb.internal.IgnorableRequestContext;
 import com.mongodb.internal.TimeoutSettings;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ClusterBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.binding.ConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.changestream.ChangeStreamLevel;
 import com.mongodb.internal.connection.Cluster;
 import com.mongodb.internal.connection.OperationContext;
@@ -423,8 +416,8 @@ final class MongoClusterImpl implements MongoCluster {
 
             ClientSession actualClientSession = getClientSession(session);
             OperationContext operationContext = getOperationContext(actualClientSession, readConcern)
-                    .withSessionContext(new ClientSessionBinding.SyncClientSessionContext(actualClientSession, isImplicitSession(session)));
-            ReadBinding binding = getReadBinding(readPreference, readConcern, actualClientSession, isImplicitSession(session));
+                    .withSessionContext(new ClientSessionBinding.SyncClientSessionContext(actualClientSession, readConcern, isImplicitSession(session)));
+            ReadBinding binding = getReadBinding(readPreference, actualClientSession, isImplicitSession(session));
 
             try {
                 if (actualClientSession.hasActiveTransaction() && !binding.getReadPreference().equals(primary())) {
@@ -450,8 +443,8 @@ final class MongoClusterImpl implements MongoCluster {
 
             ClientSession actualClientSession = getClientSession(session);
             OperationContext operationContext = getOperationContext(actualClientSession, readConcern)
-                    .withSessionContext(new ClientSessionBinding.SyncClientSessionContext(actualClientSession, isImplicitSession(session)));
-            WriteBinding binding = getWriteBinding(readConcern, actualClientSession, isImplicitSession(session));
+                    .withSessionContext(new ClientSessionBinding.SyncClientSessionContext(actualClientSession, readConcern, isImplicitSession(session)));
+            WriteBinding binding = getWriteBinding(actualClientSession, isImplicitSession(session));
 
             try {
                 return operation.execute(binding, operationContext);
@@ -478,20 +471,19 @@ final class MongoClusterImpl implements MongoCluster {
             return executorTimeoutSettings;
         }
 
-        WriteBinding getWriteBinding(final ReadConcern readConcern, final ClientSession session, final boolean ownsSession) {
-            return getReadWriteBinding(primary(), readConcern, session, ownsSession);
+        WriteBinding getWriteBinding(final ClientSession session, final boolean ownsSession) {
+            return getReadWriteBinding(primary(), session, ownsSession);
         }
 
-        ReadBinding getReadBinding(final ReadPreference readPreference, final ReadConcern readConcern, final ClientSession session,
+        ReadBinding getReadBinding(final ReadPreference readPreference, final ClientSession session,
                 final boolean ownsSession) {
-            return getReadWriteBinding(readPreference, readConcern, session, ownsSession);
+            return getReadWriteBinding(readPreference, session, ownsSession);
         }
 
-        ReadWriteBinding getReadWriteBinding(final ReadPreference readPreference,
-                final ReadConcern readConcern, final ClientSession session, final boolean ownsSession) {
+        ReadWriteBinding getReadWriteBinding(final ReadPreference readPreference, final ClientSession session, final boolean ownsSession) {
 
             ClusterAwareReadWriteBinding readWriteBinding = new ClusterBinding(cluster,
-                    getReadPreferenceForBinding(readPreference, session), readConcern);
+                    getReadPreferenceForBinding(readPreference, session));
 
             if (crypt != null) {
                 readWriteBinding = new CryptBinding(readWriteBinding, crypt);

@@ -48,13 +48,9 @@ import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryState;
 import com.mongodb.internal.binding.AsyncConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.AsyncWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.bulk.AbstractClientDeleteModel;
 import com.mongodb.internal.client.model.bulk.AbstractClientDeleteOptions;
 import com.mongodb.internal.client.model.bulk.AbstractClientNamespacedWriteModel;
@@ -283,7 +279,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                 // If connection pinning is required, `binding` handles that,
                 // and `ClientSession`, `TransactionContext` are aware of that.
                 () -> withSourceAndConnection(binding::getWriteConnectionSource, true,
-                        (connectionSource, connection) -> {
+                        (connectionSource, connection, commandOperationContext) -> {
                             ConnectionDescription connectionDescription = connection.getDescription();
                             boolean effectiveRetryWrites = isRetryableWrite(
                                     retryWritesSetting, effectiveWriteConcern, connectionDescription, sessionContext);
@@ -295,8 +291,8 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                                     retryState, effectiveRetryWrites, effectiveWriteConcern, sessionContext, unexecutedModels, batchEncoder,
                                     () -> retryState.attach(AttachmentKeys.retryableCommandFlag(), true, true));
                             return executeBulkWriteCommandAndExhaustOkResponse(
-                                    retryState, connectionSource, connection, bulkWriteCommand, effectiveWriteConcern, operationContext);
-                        })
+                                    retryState, connectionSource, connection, bulkWriteCommand, effectiveWriteConcern, commandOperationContext);
+                        }, operationContext)
         );
 
         try {
@@ -342,8 +338,8 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                 // and it is allowed by https://jira.mongodb.org/browse/DRIVERS-2502.
                 // If connection pinning is required, `binding` handles that,
                 // and `ClientSession`, `TransactionContext` are aware of that.
-                funcCallback -> withAsyncSourceAndConnection(binding::getWriteConnectionSource, true, funcCallback,
-                        (connectionSource, connection, resultCallback) -> {
+                funcCallback -> withAsyncSourceAndConnection(binding::getWriteConnectionSource, true, operationContext, funcCallback,
+                        (connectionSource, connection, operationContextWithMinRtt, resultCallback) -> {
                             ConnectionDescription connectionDescription = connection.getDescription();
                             boolean effectiveRetryWrites = isRetryableWrite(
                                     retryWritesSetting, effectiveWriteConcern, connectionDescription, sessionContext);
@@ -355,7 +351,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                                     retryState, effectiveRetryWrites, effectiveWriteConcern, sessionContext, unexecutedModels, batchEncoder,
                                     () -> retryState.attach(AttachmentKeys.retryableCommandFlag(), true, true));
                             executeBulkWriteCommandAndExhaustOkResponseAsync(
-                                    retryState, connectionSource, connection, bulkWriteCommand, effectiveWriteConcern, operationContext, resultCallback);
+                                    retryState, connectionSource, connection, bulkWriteCommand, effectiveWriteConcern, operationContextWithMinRtt, resultCallback);
                         })
         );
 
@@ -450,7 +446,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
             }
             beginAsync().<List<List<BsonDocument>>>thenSupply(c -> {
                 doWithRetriesDisabledForCommandAsync(retryState, "getMore", (c1) -> {
-                    exhaustBulkWriteCommandOkResponseCursorAsync(connectionSource, connection, bulkWriteCommandOkResponse, c1);
+                    exhaustBulkWriteCommandOkResponseCursorAsync(connectionSource, connection, bulkWriteCommandOkResponse, operationContext, c1);
                 }, c);
             }).<ExhaustiveClientBulkWriteCommandOkResponse>thenApply((cursorExhaustBatches, c) -> {
                 c.complete(createExhaustiveClientBulkWriteCommandOkResponse(
@@ -519,7 +515,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
             final OperationContext operationContext,
             final Connection connection,
             final BsonDocument response) {
-        try (CommandBatchCursorNew<BsonDocument> cursor = cursorDocumentToBatchCursor(
+        try (CommandBatchCursor<BsonDocument> cursor = cursorDocumentToBatchCursor(
                 TimeoutMode.CURSOR_LIFETIME,
                 response,
                 SERVER_DEFAULT_CURSOR_BATCH_SIZE,
@@ -536,6 +532,7 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
     private void exhaustBulkWriteCommandOkResponseCursorAsync(final AsyncConnectionSource connectionSource,
                                                               final AsyncConnection connection,
                                                               final BsonDocument bulkWriteCommandOkResponse,
+                                                              final OperationContext operationContext,
                                                               final SingleResultCallback<List<List<BsonDocument>>> finalCallback) {
         AsyncBatchCursor<BsonDocument> cursor = cursorDocumentToAsyncBatchCursor(
                 TimeoutMode.CURSOR_LIFETIME,
@@ -544,7 +541,8 @@ public final class ClientBulkWriteOperation implements WriteOperation<ClientBulk
                 codecRegistry.get(BsonDocument.class),
                 options.getComment().orElse(null),
                 connectionSource,
-                connection);
+                connection,
+                operationContext);
 
         beginAsync().<List<List<BsonDocument>>>thenSupply(callback -> {
              cursor.exhaust(callback);

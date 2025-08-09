@@ -24,11 +24,7 @@ import com.mongodb.client.cursor.TimeoutMode;
 import com.mongodb.client.model.Collation;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
@@ -160,24 +156,32 @@ public class AggregateToCollectionOperation implements AsyncReadOperation<Void>,
 
     @Override
     public Void execute(final ReadBinding binding, final OperationContext operationContext) {
-        return executeRetryableRead(binding,
+        return executeRetryableRead(
                 operationContext,
-                                    () -> binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary()),
-                                    namespace.getDatabaseName(),
-                                    getCommandCreator(),
+                (serverSelectionOperationContext) ->
+                        binding.getReadConnectionSource(
+                                FIVE_DOT_ZERO_WIRE_VERSION,
+                                ReadPreference.primary(),
+                                serverSelectionOperationContext),
+                namespace.getDatabaseName(),
+                getCommandCreator(),
                 new BsonDocumentCodec(), transformer(), false);
     }
 
     @Override
     public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext,
                              final SingleResultCallback<Void> callback) {
-        executeRetryableReadAsync(binding,
-                                  operationContext,
-                                  (connectionSourceCallback) ->
-                        binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary(), connectionSourceCallback),
-                                  namespace.getDatabaseName(),
-                                  getCommandCreator(),
-                new BsonDocumentCodec(), asyncTransformer(), false, callback);
+        executeRetryableReadAsync(
+                binding,
+                operationContext,
+                (serverSelectionOperationContext, connectionSourceCallback) ->
+                        binding.getReadConnectionSource(FIVE_DOT_ZERO_WIRE_VERSION, ReadPreference.primary(), serverSelectionOperationContext, connectionSourceCallback),
+                namespace.getDatabaseName(),
+                getCommandCreator(),
+                new BsonDocumentCodec(),
+                asyncTransformer(),
+                false,
+                callback);
     }
 
     private CommandOperationHelper.CommandCreator getCommandCreator() {

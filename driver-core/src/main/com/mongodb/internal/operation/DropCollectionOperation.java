@@ -90,11 +90,11 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         BsonDocument localEncryptedFields = getEncryptedFields((ReadWriteBinding) binding, operationContext);
-        return withConnection(binding, connection -> {
+        return withConnection(binding, operationContext, (connection, operationContextWithMinRtt) -> {
             getCommands(localEncryptedFields).forEach(command -> {
                 try {
-                    executeCommand(binding, operationContext, namespace.getDatabaseName(), command.get(),
-                            connection, writeConcernErrorTransformer(operationContext.getTimeoutContext()));
+                    executeCommand(binding, operationContextWithMinRtt, namespace.getDatabaseName(), command.get(),
+                            connection, writeConcernErrorTransformer(operationContextWithMinRtt.getTimeoutContext()));
                 } catch (MongoCommandException e) {
                     rethrowIfNotNamespaceError(e);
                 }
@@ -111,11 +111,11 @@ public class DropCollectionOperation implements AsyncWriteOperation<Void>, Write
             if (t != null) {
                 errHandlingCallback.onResult(null, t);
             } else {
-                withAsyncConnection(binding, (connection, t1) -> {
+                withAsyncConnection(binding, operationContext, (connection, operationContextWithMinRtt, t1) -> {
                     if (t1 != null) {
                         errHandlingCallback.onResult(null, t1);
                     } else {
-                        new ProcessCommandsCallback(binding, operationContext, connection, getCommands(result),
+                        new ProcessCommandsCallback(binding, operationContextWithMinRtt, connection, getCommands(result),
                                 releasingCallback(errHandlingCallback,
                                 connection))
                                 .onResult(null, null);

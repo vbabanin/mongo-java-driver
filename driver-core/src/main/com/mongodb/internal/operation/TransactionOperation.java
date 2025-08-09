@@ -21,10 +21,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.WriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.validator.NoOpFieldNameValidator;
 import org.bson.BsonDocument;
@@ -70,7 +67,7 @@ public abstract class TransactionOperation implements WriteOperation<Void>, Asyn
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
         isTrue("in transaction", operationContext.getSessionContext().hasActiveTransaction());
         TimeoutContext timeoutContext = operationContext.getTimeoutContext();
-        executeRetryableWriteAsync(binding, operationContext,"admin", null, NoOpFieldNameValidator.INSTANCE,
+        executeRetryableWriteAsync(binding, operationContext, "admin", null, NoOpFieldNameValidator.INSTANCE,
                                    new BsonDocumentCodec(), getCommandCreator(),
                 writeConcernErrorTransformerAsync(timeoutContext), getRetryCommandModifier(timeoutContext),
                                    errorHandlingCallback(callback, LOGGER));

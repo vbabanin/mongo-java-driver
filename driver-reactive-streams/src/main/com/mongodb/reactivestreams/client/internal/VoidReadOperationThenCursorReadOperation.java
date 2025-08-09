@@ -42,11 +42,11 @@ class VoidReadOperationThenCursorReadOperation<T> implements AsyncReadOperation<
 
     @Override
     public void executeAsync(final AsyncReadBinding binding, final OperationContext operationContext, final SingleResultCallback<AsyncBatchCursor<T>> callback) {
-        readOperation.executeAsync(binding, (result, t) -> {
+        readOperation.executeAsync(binding, operationContext, (result, t) -> {
             if (t != null) {
                 callback.onResult(null, t);
             } else {
-                cursorReadOperation.executeAsync(binding, callback);
+                cursorReadOperation.executeAsync(binding, operationContext, callback);
             }
         });
     }

@@ -19,14 +19,9 @@ package com.mongodb.client.internal;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ServerDescription;
-import com.mongodb.internal.binding.BindingContext;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ClusterAwareReadWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ConnectionSource;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.binding.ReadWriteBinding;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 
@@ -46,28 +41,23 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
     }
 
     @Override
-    public ConnectionSource getReadConnectionSource() {
-        return new CryptConnectionSource(wrapped.getReadConnectionSource());
+    public ConnectionSource getReadConnectionSource(final OperationContext operationContext) {
+        return new CryptConnectionSource(wrapped.getReadConnectionSource(operationContext));
     }
 
     @Override
-    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference) {
-        return new CryptConnectionSource(wrapped.getReadConnectionSource(minWireVersion, fallbackReadPreference));
+    public ConnectionSource getReadConnectionSource(final int minWireVersion, final ReadPreference fallbackReadPreference, final OperationContext operationContext) {
+        return new CryptConnectionSource(wrapped.getReadConnectionSource(minWireVersion, fallbackReadPreference, operationContext));
     }
 
     @Override
-    public ConnectionSource getWriteConnectionSource() {
-        return new CryptConnectionSource(wrapped.getWriteConnectionSource());
+    public ConnectionSource getWriteConnectionSource(final OperationContext operationContext) {
+        return new CryptConnectionSource(wrapped.getWriteConnectionSource(operationContext));
     }
 
     @Override
-    public ConnectionSource getConnectionSource(final ServerAddress serverAddress) {
-        return new CryptConnectionSource(wrapped.getConnectionSource(serverAddress));
-    }
-
-    @Override
-    public CryptBinding withOperationContext(final OperationContext operationContext) {
-        return null;
+    public ConnectionSource getConnectionSource(final ServerAddress serverAddress, final OperationContext operationContext) {
+        return new CryptConnectionSource(wrapped.getConnectionSource(serverAddress, operationContext));
     }
 
     @Override
@@ -104,8 +94,8 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
         }
 
         @Override
-        public Connection getConnection() {
-            return new CryptConnection(wrapped.getConnection(), crypt);
+        public Connection getConnection(final OperationContext operationContext) {
+            return new CryptConnection(wrapped.getConnection(operationContext), crypt);
         }
 
         @Override
@@ -117,11 +107,6 @@ class CryptBinding implements ClusterAwareReadWriteBinding {
         public ConnectionSource retain() {
             wrapped.retain();
             return this;
-        }
-
-        @Override
-        public ConnectionSource withOperationContext(final OperationContext operationContext) {
-            return wrapped.withOperationContext(operationContext);
         }
 
         @Override

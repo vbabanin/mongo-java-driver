@@ -19,8 +19,6 @@ package com.mongodb.internal.operation;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.binding.AsyncReadBinding;
 import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
-import com.mongodb.internal.connection.OperationContext;
 
 /**
  * An operation which asynchronously reads from a MongoDB server.

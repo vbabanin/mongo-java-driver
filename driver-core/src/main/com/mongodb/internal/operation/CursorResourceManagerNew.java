@@ -21,7 +21,6 @@ import com.mongodb.MongoSocketException;
 import com.mongodb.ServerCursor;
 import com.mongodb.annotations.ThreadSafe;
 import com.mongodb.internal.binding.ReferenceCounted;
-import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.internal.connection.Connection;
 import com.mongodb.internal.connection.OperationContext;
 import com.mongodb.lang.Nullable;
@@ -42,7 +41,7 @@ abstract class CursorResourceManagerNew<CS extends ReferenceCounted, C extends R
     private final MongoNamespace namespace;
     private volatile State state;
     @Nullable
-    protected volatile CS connectionSource;
+    private volatile CS connectionSource;
     @Nullable
     private volatile C pinnedConnection;
     @Nullable
@@ -143,7 +142,7 @@ abstract class CursorResourceManagerNew<CS extends ReferenceCounted, C extends R
     /**
      * Thread-safe.
      */
-    void endOperation(OperationContext operationContext) {
+    void endOperation(final OperationContext operationContext) {
         boolean doClose = withLock(lock, () -> {
             State localState = state;
             if (localState == State.OPERATION_IN_PROGRESS) {
@@ -164,7 +163,7 @@ abstract class CursorResourceManagerNew<CS extends ReferenceCounted, C extends R
     /**
      * Thread-safe.
      */
-    void close(OperationContext operationContext) {
+    void close(final OperationContext operationContext) {
         boolean doClose = withLock(lock, () -> {
             State localState = state;
             if (localState.isOperationInProgress()) {
