@@ -68,6 +68,6 @@ public abstract class Benchmark {
     }
 
     private String getResourceRoot() {
-        return System.getProperty(TEST_DATA_SYSTEM_PROPERTY_NAME);
+        return"driver-benchmarks/src/resources/";
     }
 }

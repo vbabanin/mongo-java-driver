@@ -62,51 +62,52 @@ public class BenchmarkSuite {
     private static void runBenchmarks()
             throws Exception {
 
-        runMongoCryptBenchMarks();
-        runBenchmark(new BsonEncodingBenchmark<>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
-        runBenchmark(new BsonEncodingBenchmark<>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
-        runBenchmark(new BsonEncodingBenchmark<>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
+//        runMongoCryptBenchMarks();
+//        runBenchmark(new BsonEncodingBenchmark<>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
+//        runBenchmark(new BsonEncodingBenchmark<>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
+//        runBenchmark(new BsonEncodingBenchmark<>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
+//
+//        runBenchmark(new BsonDecodingBenchmark<>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
+//        runBenchmark(new BsonDecodingBenchmark<>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
+//        runBenchmark(new BsonDecodingBenchmark<>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
+//
+//        runBenchmark(new RunCommandBenchmark<>(DOCUMENT_CODEC));
+//        runBenchmark(new FindOneBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
 
-        runBenchmark(new BsonDecodingBenchmark<>("Flat", "extended_bson/flat_bson.json", DOCUMENT_CODEC));
-        runBenchmark(new BsonDecodingBenchmark<>("Deep", "extended_bson/deep_bson.json", DOCUMENT_CODEC));
-        runBenchmark(new BsonDecodingBenchmark<>("Full", "extended_bson/full_bson.json", DOCUMENT_CODEC));
+//        runBenchmark(new InsertOneBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS, ID_REMOVER));
+//        runBenchmark(new InsertOneBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
+//                DOCUMENT_CLASS, ID_REMOVER));
 
-        runBenchmark(new RunCommandBenchmark<>(DOCUMENT_CODEC));
-        runBenchmark(new FindOneBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
-
-        runBenchmark(new InsertOneBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS, ID_REMOVER));
-        runBenchmark(new InsertOneBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS, ID_REMOVER));
-
+        System.err.println("START");
         runBenchmark(new FindManyBenchmark<Document>("single_and_multi_document/tweet.json", BenchmarkSuite.DOCUMENT_CLASS));
-        runBenchmark(new InsertManyBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new InsertManyBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
-
-        runBenchmark(new CollectionBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new CollectionBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
-
-        runBenchmark(new ClientBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new ClientBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
-                DOCUMENT_CLASS));
-
-        runBenchmark(new MixedCollectionBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-        runBenchmark(new MixedClientBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
-                DOCUMENT_CLASS));
-
-        runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
-        runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
-
-        runBenchmark(new MultiFileImportBenchmark());
-        runBenchmark(new MultiFileExportBenchmark());
-        runBenchmark(new GridFSMultiFileUploadBenchmark());
-        runBenchmark(new GridFSMultiFileDownloadBenchmark());
+//        runBenchmark(new InsertManyBenchmark<Document>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS));
+//        runBenchmark(new InsertManyBenchmark<Document>("Large", "./single_and_multi_document/large_doc.json", 10,
+//                DOCUMENT_CLASS));
+//
+//        runBenchmark(new CollectionBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS));
+//        runBenchmark(new CollectionBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
+//                DOCUMENT_CLASS));
+//
+//        runBenchmark(new ClientBulkWriteBenchmark<>("Small", "./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS));
+//        runBenchmark(new ClientBulkWriteBenchmark<>("Large", "./single_and_multi_document/large_doc.json", 10,
+//                DOCUMENT_CLASS));
+//
+//        runBenchmark(new MixedCollectionBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS));
+//        runBenchmark(new MixedClientBulkWriteBenchmark<>("./single_and_multi_document/small_doc.json", 10_000,
+//                DOCUMENT_CLASS));
+//
+//        runBenchmark(new GridFSUploadBenchmark("single_and_multi_document/gridfs_large.bin"));
+//        runBenchmark(new GridFSDownloadBenchmark("single_and_multi_document/gridfs_large.bin"));
+//
+//        runBenchmark(new MultiFileImportBenchmark());
+//        runBenchmark(new MultiFileExportBenchmark());
+//        runBenchmark(new GridFSMultiFileUploadBenchmark());
+//        runBenchmark(new GridFSMultiFileDownloadBenchmark());
     }
 
     private static void runMongoCryptBenchMarks() throws InterruptedException {
