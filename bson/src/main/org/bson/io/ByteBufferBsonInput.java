@@ -151,27 +151,23 @@ public class ByteBufferBsonInput implements BsonInput {
             }
             return ONE_BYTE_ASCII_STRINGS[asciiByte];  // this will throw if asciiByte is negative
         } else {
-            if (buffer.isBackedByArray()) {
-                int position = buffer.position();
-                int arrayOffset = buffer.arrayOffset();
-                int newPosition = position + bsonStringSize;
-                buffer.position(newPosition);
-
-                byte[] array = buffer.array();
-                if (array[arrayOffset + newPosition - 1] != 0) {
-                    throw new BsonSerializationException("Found a BSON string that is not null-terminated");
-                }
-                return new String(array, arrayOffset + position, bsonStringSize - 1, StandardCharsets.UTF_8);
-            } else if (scratchBuffer == null || bsonStringSize > scratchBuffer.length) {
-                int scratchBufferSize = bsonStringSize + (bsonStringSize >>> 1); //1.5 times the size
-                scratchBuffer = new byte[scratchBufferSize];
+            byte[] bytes = new byte[bsonStringSize - 1];
+            buffer.get(bytes);
+            byte nullByte = buffer.get();
+            if (nullByte != 0) {
+                throw new BsonSerializationException("Found a BSON string that is not null-terminated");
             }
-
-            buffer.get(scratchBuffer, 0, bsonStringSize);
-            if (scratchBuffer[bsonStringSize - 1] != 0) {
-                throw new BsonSerializationException("BSON string not null-terminated");
-            }
-            return new String(scratchBuffer, 0, bsonStringSize - 1, StandardCharsets.UTF_8);
+            return new String(bytes, StandardCharsets.UTF_8);
+//            if (scratchBuffer == null || bsonStringSize > scratchBuffer.length) {
+//                int scratchBufferSize = bsonStringSize + (bsonStringSize >>> 1); //1.5 times the size
+//                scratchBuffer = new byte[scratchBufferSize];
+//            }
+//
+//            buffer.get(scratchBuffer, 0, bsonStringSize);
+//            if (scratchBuffer[bsonStringSize - 1] != 0) {
+//                throw new BsonSerializationException("BSON string not null-terminated");
+//            }
+//            return new String(scratchBuffer, 0, bsonStringSize - 1, StandardCharsets.UTF_8);
         }
     }
 
@@ -261,6 +257,7 @@ public class ByteBufferBsonInput implements BsonInput {
     public BsonInputMark getMark(final int readLimit) {
         return new BsonInputMark() {
             private final int mark = buffer.position();
+
             @Override
             public void reset() {
                 ensureOpen();
@@ -286,10 +283,11 @@ public class ByteBufferBsonInput implements BsonInput {
             throw new IllegalStateException("Stream is closed");
         }
     }
+
     private void ensureAvailable(final int bytesNeeded) {
         if (buffer.remaining() < bytesNeeded) {
             throw new BsonSerializationException(format("While decoding a BSON document %d bytes were required, "
-                                                        + "but only %d remain", bytesNeeded, buffer.remaining()));
+                    + "but only %d remain", bytesNeeded, buffer.remaining()));
         }
     }
 }
