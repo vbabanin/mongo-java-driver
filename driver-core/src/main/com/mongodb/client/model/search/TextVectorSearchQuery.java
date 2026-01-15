@@ -18,7 +18,7 @@ package com.mongodb.client.model.search;
 import com.mongodb.annotations.Beta;
 import com.mongodb.annotations.Reason;
 import com.mongodb.annotations.Sealed;
-import com.mongodb.lang.Nullable;
+import com.mongodb.client.model.SearchIndexModel;
 
 /**
  * A text-based vector search query for MongoDB Atlas auto-embedding.
@@ -37,7 +37,7 @@ public interface TextVectorSearchQuery extends VectorSearchQuery {
     /**
      * Specifies the embedding model to use for generating embeddings from the query text.
      * <p>
-     * If not specified, the model configured in the vector search index definition will be used.
+     * If not specified, the model configured in vector {@link SearchIndexModel} will be used.
      * The specified model must be compatible with the model used in the index definition.
      * </p>
      *
@@ -45,12 +45,4 @@ public interface TextVectorSearchQuery extends VectorSearchQuery {
      * @return A new {@link TextVectorSearchQuery} with the specified model.
      */
     TextVectorSearchQuery model(String modelName);
-
-    /**
-     * Returns the embedding model name, if specified.
-     *
-     * @return The model name, or {@code null} if not specified.
-     */
-    @Nullable
-    String getModel();
 }

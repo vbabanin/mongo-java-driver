@@ -25,7 +25,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 /**
  * Package-private implementation of {@link TextVectorSearchQuery}.
  */
-final class TextVectorSearchQueryImpl implements TextVectorSearchQuery {
+final class TextVectorSearchQueryImpl extends AbstractVectorSearchQuery implements TextVectorSearchQuery {
     private final String text;
     @Nullable
     private final String model;

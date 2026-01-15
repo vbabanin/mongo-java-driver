@@ -22,6 +22,7 @@ import com.mongodb.client.model.densify.DensifyRange;
 import com.mongodb.client.model.fill.FillOptions;
 import com.mongodb.client.model.fill.FillOutputField;
 import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.search.AbstractVectorSearchQuery;
 import com.mongodb.client.model.search.FieldSearchPath;
 import com.mongodb.client.model.search.SearchCollector;
 import com.mongodb.client.model.search.SearchOperator;
@@ -998,7 +999,7 @@ public final class Aggregates {
     @Beta(Reason.SERVER)
     public static Bson vectorSearch(
             final FieldSearchPath path,
-            final TextVectorSearchQuery query,
+            final VectorSearchQuery query,
             final String index,
             final long limit,
             final VectorSearchOptions options) {
@@ -2213,7 +2214,7 @@ public final class Aggregates {
          */
         private final String embeddingModelName;
 
-        VectorSearchQueryBson(final FieldSearchPath path, final TextVectorSearchQuery query,
+        VectorSearchQueryBson(final FieldSearchPath path, final VectorSearchQuery query,
                 final String index, final long limit,
                 final VectorSearchOptions options) {
             this.path = path;
@@ -2221,9 +2222,9 @@ public final class Aggregates {
             this.index = index;
             this.limit = limit;
             this.options = options;
-            // Extract model name from query if it's a TextVectorSearchQuery
+            // Extract model name from query via AbstractVectorSearchQuery
             // when null then model name from the index definition will be used by the server
-            this.embeddingModelName = query.getModel();
+            this.embeddingModelName = ((AbstractVectorSearchQuery) query).getModel();
         }
 
         @Override
