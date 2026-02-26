@@ -53,6 +53,17 @@ final class ByteBufBsonDocument extends BsonDocument {
 
     private final transient ByteBuf byteBuf;
 
+    @Override
+    public boolean equals(final Object o) {
+        System.err.println("byteBuf count: " + byteBuf.getReferenceCount());
+
+        if(o instanceof ByteBufBsonDocument) {
+            ByteBufBsonDocument other = (ByteBufBsonDocument) o;
+            System.err.println("bytBuf count other " + other.byteBuf.getReferenceCount());
+        }
+        return super.equals(o);
+    }
+
     /**
      * Create a list of ByteBufBsonDocument from a buffer positioned at the start of the first document of an OP_MSG Section
      * of type Document Sequence (Kind 1).
@@ -338,6 +349,7 @@ final class ByteBufBsonDocument extends BsonDocument {
 
                 @Override
                 public boolean hasNext() {
+                  //  System.err.println("hasNext called, byteBuf position: " + duplicatedByteBuf.position() + ", limit: " + duplicatedByteBuf.limit());
                     return bsonReader.getCurrentBsonType() != BsonType.END_OF_DOCUMENT;
                 }
 

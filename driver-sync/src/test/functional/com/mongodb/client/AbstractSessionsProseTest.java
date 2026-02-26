@@ -93,21 +93,27 @@ public abstract class AbstractSessionsProseTest {
                         .addCommandListener(new CommandListener() {
                             @Override
                             public void commandStarted(final CommandStartedEvent event) {
-                                lsidSet.add(event.getCommand().getDocument("lsid"));
+                                BsonDocument command = event.getCommand();
+                                System.err.print(event.getCommandName() + " -> " + command.getClass().getName());
+                                BsonDocument lsid = command.getDocument("lsid");
+                                System.err.print(" -> " + lsid.getClass().getName());
+                                System.err.println();
+                                System.err.println("lsid: " + lsid);
+                                lsidSet.add(lsid);
                             }
                         })
                         .build())) {
             collection = client.getDatabase(getDefaultDatabaseName()).getCollection(getClass().getName());
 
             List<Runnable> operations = asList(
-                    () -> collection.insertOne(new Document()),
-                    () -> collection.deleteOne(Filters.eq("_id", 1)),
-                    () -> collection.updateOne(Filters.eq("_id", 1), Updates.set("x", 1)),
-                    () -> collection.bulkWrite(singletonList(new UpdateOneModel<>(Filters.eq("_id", 1), Updates.set("x", 1)))),
+                    () -> collection.find().first(),
                     () -> collection.findOneAndDelete(Filters.eq("_id", 1)),
                     () -> collection.findOneAndUpdate(Filters.eq("_id", 1), Updates.set("x", 1)),
                     () -> collection.findOneAndReplace(Filters.eq("_id", 1), new Document("_id", 1)),
-                    () -> collection.find().first()
+                    () -> collection.insertOne(new Document()),
+                    () -> collection.deleteOne(Filters.eq("_id", 1)),
+                    () -> collection.updateOne(Filters.eq("_id", 1), Updates.set("x", 1)),
+                    () -> collection.bulkWrite(singletonList(new UpdateOneModel<>(Filters.eq("_id", 1), Updates.set("x", 1))))
             );
 
             int minLsidSetSize = Integer.MAX_VALUE;
@@ -121,6 +127,7 @@ public abstract class AbstractSessionsProseTest {
                 ExecutorService executor = Executors.newFixedThreadPool(operations.size());
 
                 operations.forEach(executor::submit);
+                Thread.sleep(100);
 
                 executor.shutdown();
                 boolean terminated = executor.awaitTermination(5, TimeUnit.SECONDS);
