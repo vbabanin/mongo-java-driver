@@ -21,6 +21,7 @@ import com.mongodb.internal.VisibleForTesting;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.DoubleSupplier;
 
+import static com.mongodb.assertions.Assertions.assertNotNull;
 import static com.mongodb.assertions.Assertions.assertTrue;
 import static com.mongodb.internal.VisibleForTesting.AccessModifier.PRIVATE;
 
@@ -35,7 +36,7 @@ public final class ExponentialBackoff {
     private static final double TRANSACTION_GROWTH = 1.5;
 
     // TODO-JAVA-6079
-    private static DoubleSupplier testJitterSupplier = null;
+    private static DoubleSupplier testJitterSupplier = ThreadLocalRandom.current()::nextDouble;
 
     private ExponentialBackoff() {
     }
@@ -48,9 +49,7 @@ public final class ExponentialBackoff {
      */
     public static long calculateTransactionBackoffMs(final int attemptNumber) {
         assertTrue(attemptNumber > 0, "Attempt number must be at least 1 (1-based) in the context of transaction backoff calculation");
-        double jitter = testJitterSupplier != null
-                ? testJitterSupplier.getAsDouble()
-                : ThreadLocalRandom.current().nextDouble();
+        double jitter = testJitterSupplier.getAsDouble();
         return Math.round(jitter * Math.min(
                 TRANSACTION_BASE_MS * Math.pow(TRANSACTION_GROWTH, attemptNumber - 1),
                 TRANSACTION_MAX_MS));
@@ -63,6 +62,7 @@ public final class ExponentialBackoff {
      */
     @VisibleForTesting(otherwise = PRIVATE)
     public static void setTestJitterSupplier(final DoubleSupplier supplier) {
+        assertNotNull(supplier);
         testJitterSupplier = supplier;
     }
 
@@ -71,6 +71,6 @@ public final class ExponentialBackoff {
      */
     @VisibleForTesting(otherwise = PRIVATE)
     public static void clearTestJitterSupplier() {
-        testJitterSupplier = null;
+        testJitterSupplier = ThreadLocalRandom.current()::nextDouble;
     }
 }
