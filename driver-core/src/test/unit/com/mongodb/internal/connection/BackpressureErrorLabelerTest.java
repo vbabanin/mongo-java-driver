@@ -23,14 +23,20 @@ import com.mongodb.MongoSocketException;
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadTimeoutException;
 import com.mongodb.ServerAddress;
-import org.bson.BsonDocument;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,115 +45,129 @@ class BackpressureErrorLabelerTest {
 
     private static final ServerAddress ADDRESS = new ServerAddress();
 
-    @Test
-    void mongoSocketExceptionIsLabeled() {
-        MongoSocketException e = new MongoSocketException("boom", ADDRESS);
+    static Stream<Named<MongoSocketException>> networkErrorShouldBeLabeled() {
+        return Stream.of(
+                named(new MongoSocketException("boom", ADDRESS)),
+                named(new MongoSocketReadTimeoutException("slow", ADDRESS, new IOException("read timed out"))),
+                named(new MongoSocketOpenException("open failed", ADDRESS, new IOException("connection refused"))),
+                named(new MongoSocketException("tls", ADDRESS, initCause(
+                        new SSLHandshakeException("Remote host terminated the handshake"),
+                        new java.io.EOFException("SSL peer shut down incorrectly"))))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void networkErrorShouldBeLabeled(MongoSocketException e) {
         BackpressureErrorLabeler.applyLabelsIfEligible(e);
         assertHasBackpressureLabels(e);
     }
 
-    @Test
-    void mongoSocketReadTimeoutIsLabeled() {
-        MongoSocketReadTimeoutException e = new MongoSocketReadTimeoutException("slow", ADDRESS, new IOException("read timed out"));
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertHasBackpressureLabels(e);
+    static Stream<Named<MongoSocketException>> dnsFailureShouldNotBeLabeled() {
+        return Stream.of(
+                named(new MongoSocketException("lookup failed", ADDRESS, new UnknownHostException("nope"))),
+                named(new MongoSocketException("wrap", ADDRESS, new IOException("wrap", new UnknownHostException("nope"))))
+        );
     }
 
-    @Test
-    void mongoSocketOpenExceptionIsLabeled() {
-        MongoSocketOpenException e = new MongoSocketOpenException("open failed", ADDRESS, new IOException("connection refused"));
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertHasBackpressureLabels(e);
-    }
-
-    @Test
-    void dnsFailureIsNotLabeled() {
-        MongoSocketException e = new MongoSocketException("lookup failed", ADDRESS, new UnknownHostException("nope"));
+    @ParameterizedTest
+    @MethodSource
+    void dnsFailureShouldNotBeLabeled(MongoSocketException e) {
         BackpressureErrorLabeler.applyLabelsIfEligible(e);
         assertLacksBackpressureLabels(e);
     }
 
-    @Test
-    void dnsFailureDeepInCauseChainIsNotLabeled() {
-        Throwable dns = new UnknownHostException("nope");
-        IOException wrap1 = new IOException("wrap1", dns);
-        MongoSocketException e = new MongoSocketException("wrap2", ADDRESS, wrap1);
+    static Stream<Named<Throwable>> localTlsConfigErrorShouldNotBeLabeled() {
+        return Stream.of(
+                named(new CertificateException("bad cert")),
+                named(new CertPathBuilderException("path build failed")),
+                named(new CertPathValidatorException("validation failed")),
+                named(new SSLPeerUnverifiedException("peer not verified")),
+                named(new SSLProtocolException("protocol error")),
+                named(new SSLHandshakeException("PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: "
+                        + "unable to find valid certification path to requested target"))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void localTlsConfigErrorShouldNotBeLabeled(Throwable cause) {
+        MongoSocketException e = new MongoSocketException("tls", ADDRESS, cause);
         BackpressureErrorLabeler.applyLabelsIfEligible(e);
         assertLacksBackpressureLabels(e);
     }
 
-    @Test
-    void tlsCertificateErrorIsNotLabeled() {
-        CertificateException cert = new CertificateException("bad cert");
-        MongoSocketException e = new MongoSocketException("tls", ADDRESS, cert);
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertLacksBackpressureLabels(e);
-    }
-
-    @Test
-    void tlsPeerUnverifiedIsNotLabeled() {
-        SSLPeerUnverifiedException tls = new SSLPeerUnverifiedException("peer not verified");
+    @ParameterizedTest(name = "Received fatal alert: {0}")
+    @ValueSource(strings = {
+            "handshake_failure",
+            "no_certificate",
+            "bad_certificate",
+            "unsupported_certificate",
+            "certificate_revoked",
+            "certificate_expired",
+            "certificate_unknown",
+            "illegal_parameter",
+            "unknown_ca",
+            "access_denied",
+            "decode_error",
+            "decrypt_error",
+            "export_restriction",
+            "protocol_version",
+            "insufficient_security",
+            "no_renegotiation",
+            "missing_extension",
+            "unsupported_extension",
+            "certificate_unobtainable",
+            "unrecognized_name",
+            "bad_certificate_status_response",
+            "bad_certificate_hash_value",
+            "unknown_psk_identity",
+            "certificate_required",
+            "no_application_protocol"
+    })
+    void receivedTlsAlertShouldNotBeLabeled(String alertDescription) {
+        SSLHandshakeException tls = new SSLHandshakeException("Received fatal alert: " + alertDescription);
         MongoSocketException e = new MongoSocketException("tls", ADDRESS, tls);
         BackpressureErrorLabeler.applyLabelsIfEligible(e);
         assertLacksBackpressureLabels(e);
     }
 
-    @Test
-    void sslHandshakeWithCertificateMessageIsNotLabeled() {
-        SSLHandshakeException tls = new SSLHandshakeException("PKIX path building failed: certificate chain invalid");
-        MongoSocketException e = new MongoSocketException("tls", ADDRESS, tls);
+    static Stream<Named<Throwable>> nonSocketErrorShouldNotBeLabeled() {
+        return Stream.of(
+                named(new MongoSecurityException(
+                        MongoCredential.createCredential("user", "db", "pwd".toCharArray()), "auth failed")),
+                named(new MongoException(42, "some command error")),
+                named(new IOException("raw"))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void nonSocketErrorShouldNotBeLabeled(Throwable e) {
         BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertLacksBackpressureLabels(e);
+        if (e instanceof MongoException) {
+            assertLacksBackpressureLabels((MongoException) e);
+        }
     }
 
-    @Test
-    void sslHandshakeWithoutConfigKeywordIsLabeled() {
-        SSLHandshakeException tls = new SSLHandshakeException("remote host closed connection during handshake");
-        MongoSocketException e = new MongoSocketException("tls", ADDRESS, tls);
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertHasBackpressureLabels(e);
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> Named<T> named(T e) {
+        return Named.of(e.getClass().getSimpleName(), e);
     }
 
-    @Test
-    void authErrorIsNotLabeled() {
-        MongoCredential credential = MongoCredential.createCredential("user", "db", "pwd".toCharArray());
-        MongoSecurityException e = new MongoSecurityException(credential, "auth failed");
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertLacksBackpressureLabels(e);
+    private static <T extends Throwable> T initCause(T exception, Throwable cause) {
+        exception.initCause(cause);
+        return exception;
     }
 
-    @Test
-    void commandExceptionIsNotLabeled() {
-        MongoException e = new MongoException(42, "some command error");
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-        assertLacksBackpressureLabels(e);
-    }
-
-    @Test
-    void nonMongoThrowableIsNotLabeled() {
-        IOException e = new IOException("raw");
-        BackpressureErrorLabeler.applyLabelsIfEligible(e);
-    }
-
-    @Test
-    void sdamIssueTlsCheckDelegatesToHelper() {
-        MongoSocketException tlsException = new MongoSocketException("tls", ADDRESS, new CertificateException("bad cert"));
-        assertTrue(BackpressureErrorLabeler.isTlsConfigurationError(tlsException));
-
-        MongoSocketException plainException = new MongoSocketException("plain", ADDRESS);
-        assertFalse(BackpressureErrorLabeler.isTlsConfigurationError(plainException));
-
-        assertFalse(BackpressureErrorLabeler.isTlsConfigurationError(new MongoException(0, "not socket", new BsonDocument())));
-    }
-
-    private static void assertHasBackpressureLabels(final MongoException e) {
+    private static void assertHasBackpressureLabels(MongoException e) {
         assertTrue(e.hasErrorLabel(MongoException.SYSTEM_OVERLOADED_ERROR_LABEL),
                 "expected SystemOverloadedError label");
         assertTrue(e.hasErrorLabel(MongoException.RETRYABLE_ERROR_LABEL),
                 "expected RetryableError label");
     }
 
-    private static void assertLacksBackpressureLabels(final MongoException e) {
+    private static void assertLacksBackpressureLabels(MongoException e) {
         assertFalse(e.hasErrorLabel(MongoException.SYSTEM_OVERLOADED_ERROR_LABEL),
                 "unexpected SystemOverloadedError label");
         assertFalse(e.hasErrorLabel(MongoException.RETRYABLE_ERROR_LABEL),
