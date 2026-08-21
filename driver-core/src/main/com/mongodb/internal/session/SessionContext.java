@@ -61,6 +61,15 @@ public interface SessionContext {
     boolean notifyMessageSent();
 
     /**
+     * Notify that a message has been sent and the server returned {@code ok:1}.
+     * Called only on the success path — {@code ok:0} responses throw before this is reached,
+     * and failures are handled by the retry policy.
+     * Note: an {@code ok:1} response may still carry a {@code writeConcernError}; this notification
+     * fires in that case because the command itself executed on the server.
+     */
+    void notifyMessageProcessedSuccessfully();
+
+    /**
      * Gets the current operation time for this session context
      *
      * @return the current operation time, which may be null

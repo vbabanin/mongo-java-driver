@@ -49,6 +49,11 @@ class ClientSessionContextSpecification extends Specification {
         }
 
         @Override
+        void notifyMessageProcessedSuccessfully() {
+
+        }
+
+        @Override
         ReadConcern getReadConcern() {
             ReadConcern.DEFAULT
         }

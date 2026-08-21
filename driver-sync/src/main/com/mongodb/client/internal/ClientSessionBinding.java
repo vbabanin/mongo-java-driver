@@ -212,6 +212,11 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements Re
         }
 
         @Override
+        public void notifyMessageProcessedSuccessfully() {
+            clientSession.notifyMessageProcessedSuccessfully();
+        }
+
+        @Override
         public boolean hasActiveTransaction() {
             return clientSession.hasActiveTransaction();
         }

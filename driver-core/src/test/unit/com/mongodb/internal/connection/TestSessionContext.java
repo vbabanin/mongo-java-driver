@@ -74,6 +74,10 @@ class TestSessionContext implements SessionContext {
     }
 
     @Override
+    public void notifyMessageProcessedSuccessfully() {
+    }
+
+    @Override
     public void advanceOperationTime(final BsonTimestamp operationTime) {
         this.operationTime = operationTime;
     }

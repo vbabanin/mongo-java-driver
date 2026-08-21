@@ -214,6 +214,11 @@ public class ClientSessionBinding extends AbstractReferenceCounted implements As
         }
 
         @Override
+        public void notifyMessageProcessedSuccessfully() {
+            clientSession.notifyMessageProcessedSuccessfully();
+        }
+
+        @Override
         public boolean isSnapshot() {
             Boolean snapshot = clientSession.getOptions().isSnapshot();
             return snapshot != null && snapshot;

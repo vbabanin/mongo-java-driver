@@ -76,6 +76,10 @@ public class SimpleSessionContext implements SessionContext {
     }
 
     @Override
+    public void notifyMessageProcessedSuccessfully() {
+    }
+
+    @Override
     public BsonTimestamp getOperationTime() {
         return operationTime;
     }

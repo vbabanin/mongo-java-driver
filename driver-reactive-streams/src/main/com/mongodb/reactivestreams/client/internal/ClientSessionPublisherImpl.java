@@ -92,6 +92,14 @@ final class ClientSessionPublisherImpl extends BaseClientSessionImpl implements 
     }
 
     @Override
+    public void notifyMessageProcessedSuccessfully() {
+        OverloadRetryPolicyState.CommandExecutionScoped scoped = getOverloadRetryPolicyState().getCommandExecutionScoped();
+        if (scoped != null) {
+            scoped.onNotTryingToStartTransaction();
+        }
+    }
+
+    @Override
     public void notifyOperationInitiated(final Object operation) {
         assertTrue(operation instanceof ReadOperation || operation instanceof WriteOperation);
         if (!(hasActiveTransaction() || operation instanceof CommitTransactionOperation)) {

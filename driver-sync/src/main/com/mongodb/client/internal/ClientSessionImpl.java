@@ -102,6 +102,14 @@ final class ClientSessionImpl extends BaseClientSessionImpl implements ClientSes
         }
     }
 
+    @Override
+    public void notifyMessageProcessedSuccessfully() {
+        OverloadRetryPolicyState.CommandExecutionScoped scoped = getOverloadRetryPolicyState().getCommandExecutionScoped();
+        if (scoped != null) {
+            scoped.onNotTryingToStartTransaction();
+        }
+    }
+
 
     @Override
     public void notifyOperationInitiated(final Object operation) {

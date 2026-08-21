@@ -52,6 +52,15 @@ public interface ClientSession extends com.mongodb.session.ClientSession {
     boolean notifyMessageSent();
 
     /**
+     * Notify that a message has been sent and its response has been received successfully [code: 1].
+     * <p>
+     * For internal use only
+     * </p>
+     */
+    @Internal
+    void notifyMessageProcessedSuccessfully();
+
+    /**
      * Notify the client session that command execution is being initiated. This should be called before server selection occurs.
      * <p>
      * For internal use only

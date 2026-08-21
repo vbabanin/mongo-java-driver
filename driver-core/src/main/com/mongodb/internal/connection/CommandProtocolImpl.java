@@ -57,7 +57,9 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
     @Nullable
     @Override
     public T execute(final InternalConnection connection) {
-        return connection.sendAndReceive(getCommandMessage(connection), commandResultDecoder, operationContext);
+        T result = connection.sendAndReceive(getCommandMessage(connection), commandResultDecoder, operationContext);
+        operationContext.getSessionContext().notifyMessageProcessedSuccessfully();
+        return result;
     }
 
     @Override
@@ -68,6 +70,7 @@ class CommandProtocolImpl<T> implements CommandProtocol<T> {
                         if (t != null) {
                             callback.onResult(null, t);
                         } else {
+                            operationContext.getSessionContext().notifyMessageProcessedSuccessfully();
                             callback.onResult(result, null);
                         }
                     });

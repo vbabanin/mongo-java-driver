@@ -101,6 +101,16 @@ public interface ClientSession extends Closeable {
     void setRecoveryToken(BsonDocument recoveryToken);
 
     /**
+     * Notify that a message has been sent and its response has been received successfully.
+     * <p>
+     *     For internal use only
+     * </p>
+     */
+    @Internal
+    void notifyMessageProcessedSuccessfully();
+
+
+    /**
      * Get the options for this session.
      *
      * @return the options, which may not be null

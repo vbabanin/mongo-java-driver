@@ -72,6 +72,11 @@ public final class ClusterClockAdvancingSessionContext implements SessionContext
     }
 
     @Override
+    public void notifyMessageProcessedSuccessfully() {
+        wrapped.notifyMessageProcessedSuccessfully();
+    }
+
+    @Override
     public BsonTimestamp getOperationTime() {
         return wrapped.getOperationTime();
     }

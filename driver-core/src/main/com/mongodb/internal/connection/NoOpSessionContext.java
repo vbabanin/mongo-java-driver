@@ -70,6 +70,10 @@ public class NoOpSessionContext implements SessionContext {
         return false;
     }
 
+    @Override
+    public void notifyMessageProcessedSuccessfully() {
+    }
+
     @Nullable
     @Override
     public BsonTimestamp getOperationTime() {
