@@ -596,24 +596,6 @@ public final class UnifiedTestModifications {
                 .test("client-backpressure", "tests that operations respect overload backoff retry loop",
                         "collection.createChangeStream (read) does not retry if retryReads=false");
 
-        // TODO-BACKPRESSURE enable the below tests when JAVA-5956 is done
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations respect overload backoff retry loop", "collection.createIndex retries using operation loop");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations respect overload backoff retry loop", "collection.dropIndex retries using operation loop");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations respect overload backoff retry loop", "collection.dropIndexes retries using operation loop");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations respect overload backoff retry loop", "collection.aggregate write retries using operation loop");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times", "collection.createIndex retries at most maxAttempts=2 times");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times", "collection.dropIndex retries at most maxAttempts=2 times");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times", "collection.dropIndexes retries at most maxAttempts=2 times");
-        def.skipJira("https://jira.mongodb.org/browse/JAVA-5956 TODO-JAVA-5956")
-                .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times", "collection.aggregate write retries at most maxAttempts=2 times");
-
         // BatchCursorFlux fires closeCursor() then sink.error(e) without awaiting the killCursors reply,
         // so under reactive the test framework snapshots command events before killCursors succeeded lands.
         // Equivalent coverage is provided by the reactive BackpressureProseTest.

@@ -21,6 +21,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoServerException;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
 import com.mongodb.client.model.bulk.ClientNamespacedWriteModel;
@@ -38,12 +39,14 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.bulk.ClientBulkWriteOptions.clientBulkWriteOptions;
 import static com.mongodb.client.model.bulk.ClientUpdateOneOptions.clientUpdateOneOptions;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
+import static java.util.Collections.singletonList;
 
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.MongoException.RETRYABLE_ERROR_LABEL;
@@ -502,6 +505,146 @@ public class BackpressureProseTest {
                         Updates.set("x", 1),
                         clientUpdateOneOptions().upsert(true)));
         return client.bulkWrite(models, clientBulkWriteOptions().verboseResults(true));
+    }
+
+    /**
+     * Asserts that the supplied write command is overload-retried the expected number of times.
+     *
+     * @param commandName the server command name to fail with an overload error
+     * @param setUp       an optional setup invoked before the fail point is enabled (e.g. creating a collection)
+     * @param operation   the operation under test, invoked with the client
+     */
+    private void assertWriteCommandOverloadRetried(final String commandName, final Consumer<MongoClient> setUp,
+            final Consumer<MongoClient> operation) throws InterruptedException {
+        assumeTrue(serverVersionAtLeast(4, 4));
+        TestCommandListener commandListener = new TestCommandListener();
+        BsonDocument configureFailPoint = BsonDocument.parse(
+                "{\n"
+                + "    configureFailPoint: 'failCommand',\n"
+                + "    mode: 'alwaysOn',\n"
+                + "    data: {\n"
+                + "        failCommands: ['" + commandName + "'],\n"
+                + "        errorCode: 462,\n"
+                + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
+                + "    }\n"
+                + "}\n");
+        try (MongoClient client = createClient(MongoClientSettings.builder(getMongoClientSettings())
+                .addCommandListener(commandListener)
+                .build())) {
+            setUp.accept(client);
+            try (FailPoint ignored = FailPoint.enable(configureFailPoint, getPrimary())) {
+                commandListener.reset();
+                assertThrows(MongoServerException.class, () -> operation.accept(client));
+                assertEquals(DEFAULT_MAX_ADAPTIVE_RETRIES + 1,
+                        commandListener.getCommandStartedEvents(commandName).size(),
+                        "Expected initial attempt plus " + DEFAULT_MAX_ADAPTIVE_RETRIES + " overload retries");
+            }
+        }
+    }
+
+    @Test
+    void createIndexesOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("createIndexes",
+                client -> dropAndGetCollection("createIndexesOverloadRetries", client),
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("createIndexesOverloadRetries")
+                        .createIndex(new Document("a", 1)));
+    }
+
+    @Test
+    void dropIndexOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("dropIndexes",
+                client -> {
+                    MongoCollection<Document> coll = dropAndGetCollection("dropIndexOverloadRetries", client);
+                    coll.createIndex(new Document("a", 1));
+                },
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("dropIndexOverloadRetries")
+                        .dropIndex(new Document("a", 1)));
+    }
+
+    @Test
+    void createCollectionOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("create",
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("createCollectionOverloadRetries").drop(),
+                client -> client.getDatabase(getDefaultDatabaseName()).createCollection("createCollectionOverloadRetries"));
+    }
+
+    @Test
+    void createViewOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("create",
+                client -> {
+                    MongoCollection<Document> source = dropAndGetCollection("createViewOverloadRetriesSource", client);
+                    source.insertOne(new Document());
+                },
+                client -> client.getDatabase(getDefaultDatabaseName())
+                        .createView("createViewOverloadRetries", "createViewOverloadRetriesSource",
+                                asList(new Document("$match", new Document()))));
+    }
+
+    @Test
+    void dropCollectionOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("drop",
+                client -> dropAndGetCollection("dropCollectionOverloadRetries", client),
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("dropCollectionOverloadRetries").drop());
+    }
+
+    @Test
+    void dropDatabaseOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("dropDatabase",
+                client -> {
+                    // no setup required
+                },
+                client -> client.getDatabase(getDefaultDatabaseName()).drop());
+    }
+
+    @Test
+    void renameCollectionOverloadRetries() throws InterruptedException {
+        assertWriteCommandOverloadRetried("renameCollection",
+                client -> dropAndGetCollection("renameCollectionOverloadRetriesSource", client),
+                client -> {
+                    MongoDatabase database = client.getDatabase(getDefaultDatabaseName());
+                    database.getCollection("renameCollectionOverloadRetriesSource")
+                            .renameCollection(new MongoNamespace(getDefaultDatabaseName(), "renameCollectionOverloadRetries"));
+                });
+    }
+
+    @Test
+    void createSearchIndexesOverloadRetries() throws InterruptedException {
+        assumeTrue(serverVersionAtLeast(6, 0));
+        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+        assertWriteCommandOverloadRetried("createSearchIndexes",
+                client -> dropAndGetCollection("createSearchIndexesOverloadRetries", client),
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("createSearchIndexesOverloadRetries")
+                        .createSearchIndexes(singletonList(new SearchIndexModel(new Document("mappings", new Document("dynamic", true))))));
+    }
+
+    @Test
+    void updateSearchIndexOverloadRetries() throws InterruptedException {
+        assumeTrue(serverVersionAtLeast(6, 0));
+        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+        assertWriteCommandOverloadRetried("updateSearchIndex",
+                client -> {
+                    MongoCollection<Document> coll = dropAndGetCollection("updateSearchIndexOverloadRetries", client);
+                    coll.createSearchIndex(new Document("mappings", new Document("dynamic", true)));
+                },
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("updateSearchIndexOverloadRetries")
+                        .updateSearchIndex("default", new Document("mappings", new Document("dynamic", true))));
+    }
+
+    @Test
+    void dropSearchIndexOverloadRetries() throws InterruptedException {
+        assumeTrue(serverVersionAtLeast(6, 0));
+        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+        assertWriteCommandOverloadRetried("dropSearchIndex",
+                client -> {
+                    MongoCollection<Document> coll = dropAndGetCollection("dropSearchIndexOverloadRetries", client);
+                    coll.createSearchIndex(new Document("mappings", new Document("dynamic", true)));
+                },
+                client -> client.getDatabase(getDefaultDatabaseName()).getCollection("dropSearchIndexOverloadRetries")
+                        .dropSearchIndex("default"));
+    }
+
+    private static boolean hasAtlasSearchIndexHelperEnabled() {
+        return Boolean.parseBoolean(System.getProperty("org.mongodb.test.atlas.search.index.helpers"));
     }
 
     private static MongoCollection<Document> dropAndGetCollection(final String name, final MongoClient client) {

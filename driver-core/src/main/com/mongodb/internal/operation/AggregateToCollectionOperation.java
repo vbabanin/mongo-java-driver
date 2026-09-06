@@ -64,6 +64,9 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
     private final WriteConcern writeConcern;
     private final ReadConcern readConcern;
     private final AggregationLevel aggregationLevel;
+    private final boolean retryWrites;
+    @Nullable
+    private final Integer maxAdaptiveRetriesSetting;
 
     private Boolean allowDiskUse;
     private Boolean bypassDocumentValidation;
@@ -79,11 +82,23 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
 
     public AggregateToCollectionOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline,
             @Nullable final ReadConcern readConcern, @Nullable final WriteConcern writeConcern, final AggregationLevel aggregationLevel) {
+        this(namespace, pipeline, readConcern, writeConcern, aggregationLevel, false, null);
+    }
+
+    /**
+     * @param retryWrites Whether overload retries are enabled for this operation.
+     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
+     */
+    public AggregateToCollectionOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline,
+            @Nullable final ReadConcern readConcern, @Nullable final WriteConcern writeConcern, final AggregationLevel aggregationLevel,
+            final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.namespace = notNull("namespace", namespace);
         this.pipeline = notNull("pipeline", pipeline);
         this.writeConcern = writeConcern;
         this.readConcern = readConcern;
         this.aggregationLevel = notNull("aggregationLevel", aggregationLevel);
+        this.retryWrites = retryWrites;
+        this.maxAdaptiveRetriesSetting = maxAdaptiveRetriesSetting;
 
         isTrueArgument("pipeline is not empty", !pipeline.isEmpty());
     }
@@ -178,8 +193,8 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 transformer(),
-                false,
-                null);
+                new SpecRetryPolicy.IndividualPolicies(retryWrites)
+                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY));
     }
 
     @Override
@@ -194,8 +209,8 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 asyncTransformer(),
-                false,
-                null,
+                new SpecRetryPolicy.IndividualPolicies(retryWrites)
+                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY),
                 callback);
     }
 
