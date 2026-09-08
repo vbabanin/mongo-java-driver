@@ -20,9 +20,11 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoServerException;
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DropCollectionOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
@@ -52,6 +54,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.mongodb.client.model.Aggregates.match;
+import static com.mongodb.client.model.Indexes.ascending;
 import static com.mongodb.client.model.bulk.ClientBulkWriteOptions.clientBulkWriteOptions;
 import static com.mongodb.client.model.bulk.ClientUpdateOneOptions.clientUpdateOneOptions;
 import static java.lang.String.join;
@@ -457,38 +461,38 @@ public class BackpressureProseTest {
 
     @Test
     void createIndexesExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("createIndexes",
-                client -> getCollection(client).createIndex(new Document("a", 1)));
+        assertCommandExhaustsOverloadRetriesAndThrows("createIndexes",
+                client -> getCollection(client).createIndex(ascending("a")));
     }
 
     @Test
     void dropIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("dropIndexes",
-                client -> getCollection(client).dropIndex(new Document("a", 1)));
+        assertCommandExhaustsOverloadRetriesAndThrows("dropIndexes",
+                client -> getCollection(client).dropIndex(ascending("a")));
     }
 
     @Test
     void createViewExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("create",
+        assertCommandExhaustsOverloadRetriesAndThrows("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                asList(new Document("$match", new Document()))));
+                                singletonList(match(new Document()))));
     }
 
     @Test
     void dropCollectionExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("drop", client -> getCollection(client).drop());
+        assertCommandExhaustsOverloadRetriesAndThrows("drop", client -> getCollection(client).drop());
     }
 
     @Test
     void dropDatabaseExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("dropDatabase",
+        assertCommandExhaustsOverloadRetriesAndThrows("dropDatabase",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName()).drop());
     }
 
     @Test
     void renameCollectionExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("renameCollection",
+        assertCommandExhaustsOverloadRetriesAndThrows("renameCollection",
                 client -> getCollection(client).renameCollection(
                         new MongoNamespace(NAMESPACE.getDatabaseName(), NAMESPACE.getCollectionName() + "Renamed")));
     }
@@ -497,7 +501,7 @@ public class BackpressureProseTest {
     void createSearchIndexesExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
         assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
-        assertCommandExhaustsOverloadRetries("createSearchIndexes",
+        assertCommandExhaustsOverloadRetriesAndThrows("createSearchIndexes",
                 client -> getCollection(client).createSearchIndexes(
                         singletonList(new SearchIndexModel(new Document("mappings", new Document("dynamic", true))))));
     }
@@ -506,7 +510,7 @@ public class BackpressureProseTest {
     void updateSearchIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
         assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
-        assertCommandExhaustsOverloadRetries("updateSearchIndex",
+        assertCommandExhaustsOverloadRetriesAndThrows("updateSearchIndex",
                 client -> getCollection(client).updateSearchIndex("default", new Document("mappings", new Document("dynamic", true))));
     }
 
@@ -514,13 +518,13 @@ public class BackpressureProseTest {
     void dropSearchIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
         assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
-        assertCommandExhaustsOverloadRetries("dropSearchIndex",
+        assertCommandExhaustsOverloadRetriesAndThrows("dropSearchIndex",
                 client -> getCollection(client).dropSearchIndex("default"));
     }
 
     @Test
     void createCollectionExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetries("create",
+        assertCommandExhaustsOverloadRetriesAndThrows("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName()).createCollection(NAMESPACE.getCollectionName()));
     }
 
@@ -528,13 +532,13 @@ public class BackpressureProseTest {
     @Test
     void createIndexesDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
         assertCommandNotRetriedWhenRetryWritesDisabled("createIndexes",
-                client -> getCollection(client).createIndex(new Document("a", 1)));
+                client -> getCollection(client).createIndex(ascending("a")));
     }
 
     @Test
     void dropIndexDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
         assertCommandNotRetriedWhenRetryWritesDisabled("dropIndexes",
-                client -> getCollection(client).dropIndex(new Document("a", 1)));
+                client -> getCollection(client).dropIndex(ascending("a")));
     }
 
     @Test
@@ -542,7 +546,7 @@ public class BackpressureProseTest {
         assertCommandNotRetriedWhenRetryWritesDisabled("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                asList(new Document("$match", new Document()))));
+                                singletonList(match(new Document()))));
     }
 
     @Test
@@ -597,13 +601,13 @@ public class BackpressureProseTest {
     @Test
     void createIndexesDoesNotRetryOnRetryableWriteError() throws InterruptedException {
         assertCommandNotRetriedOnRetryableWriteError("createIndexes",
-                client -> getCollection(client).createIndex(new Document("a", 1)));
+                client -> getCollection(client).createIndex(ascending("a")));
     }
 
     @Test
     void dropIndexDoesNotRetryOnRetryableWriteError() throws InterruptedException {
         assertCommandNotRetriedOnRetryableWriteError("dropIndexes",
-                client -> getCollection(client).dropIndex(new Document("a", 1)));
+                client -> getCollection(client).dropIndex(ascending("a")));
     }
 
     @Test
@@ -611,7 +615,7 @@ public class BackpressureProseTest {
         assertCommandNotRetriedOnRetryableWriteError("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                asList(new Document("$match", new Document()))));
+                                singletonList(match(new Document()))));
     }
 
     @Test
@@ -761,7 +765,7 @@ public class BackpressureProseTest {
         }
     }
 
-    private void assertCommandExhaustsOverloadRetries(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandExhaustsOverloadRetriesAndThrows(final String commandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
         assumeTrue(serverVersionAtLeast(4, 4));
         TestCommandListener commandListener = new TestCommandListener();
