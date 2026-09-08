@@ -27,7 +27,6 @@ import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.MutableValue;
 import com.mongodb.internal.async.SingleResultCallback;
-import com.mongodb.internal.async.function.AsyncCallbackBiFunction;
 import com.mongodb.internal.async.function.AsyncCallbackFunction;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.AsyncCallbackTriFunction;
@@ -91,31 +90,6 @@ final class AsyncOperationHelper {
                                               final AsyncCallableWithSource callable) {
         binding.getReadConnectionSource(operationContext,
                 errorHandlingCallback(new AsyncCallableWithSourceCallback(callable), OperationHelper.LOGGER));
-    }
-
-    /**
-     * The asynchronous counterpart of {@code SyncOperationHelper.withWriteConnectionSource}.
-     *
-     * @see #withAsyncSuppliedResource(AsyncCallbackFunction, boolean, OperationContext, SingleResultCallback, AsyncCallbackFunction)
-     */
-    static <R> void withAsyncWriteConnectionSource(
-            final AsyncWriteBinding binding,
-            final OperationContext operationContext,
-            final SingleResultCallback<R> callback,
-            final AsyncCallbackBiFunction<AsyncConnectionSource, OperationContext, R> asyncFunction) {
-        SingleResultCallback<R> errorHandlingCallback = errorHandlingCallback(callback, OperationHelper.LOGGER);
-
-        OperationContext serverSelectionOperationContext =
-                operationContext.withOverride(TimeoutContext::withComputedServerSelectionTimeout);
-        withAsyncSuppliedResource(
-                binding::getWriteConnectionSource,
-                false,
-                serverSelectionOperationContext,
-                errorHandlingCallback,
-                (source, sourceReleasingCallback) -> asyncFunction.apply(
-                        source,
-                        operationContext.withMinRoundTripTime(source.getServerDescription()),
-                        sourceReleasingCallback));
     }
 
     static void withAsyncConnection(final AsyncWriteBinding binding,

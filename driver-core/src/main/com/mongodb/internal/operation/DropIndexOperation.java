@@ -66,10 +66,6 @@ public class DropIndexOperation implements WriteOperation<Void> {
         this(namespace, indexKeys, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public DropIndexOperation(final MongoNamespace namespace, final String indexName, @Nullable final WriteConcern writeConcern,
                               final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.namespace = notNull("namespace", namespace);
@@ -80,10 +76,6 @@ public class DropIndexOperation implements WriteOperation<Void> {
         this.maxAdaptiveRetriesSetting = maxAdaptiveRetriesSetting;
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public DropIndexOperation(final MongoNamespace namespace, final BsonDocument indexKeys, @Nullable final WriteConcern writeConcern,
                               final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.namespace = notNull("namespace", namespace);

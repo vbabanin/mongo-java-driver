@@ -110,19 +110,6 @@ final class SyncOperationHelper {
         }
     }
 
-    static <T> T withWriteConnectionSource(final WriteBinding binding,
-                                           final OperationContext operationContext,
-                                           final CallableWithSource<T> callable) {
-        OperationContext serverSelectionOperationContext =
-                operationContext.withOverride(TimeoutContext::withComputedServerSelectionTimeout);
-        ConnectionSource source = binding.getWriteConnectionSource(serverSelectionOperationContext);
-        try {
-            return callable.call(source, operationContext.withMinRoundTripTime(source.getServerDescription()));
-        } finally {
-            source.release();
-        }
-    }
-
     static <T> T withConnection(final WriteBinding binding,
                                 final OperationContext operationContext,
                                 final CallableWithConnection<T> callable) {

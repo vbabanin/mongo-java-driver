@@ -78,10 +78,6 @@ public class DropCollectionOperation implements WriteOperation<Void> {
         this(namespace, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public DropCollectionOperation(final MongoNamespace namespace, @Nullable final WriteConcern writeConcern,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.namespace = notNull("namespace", namespace);

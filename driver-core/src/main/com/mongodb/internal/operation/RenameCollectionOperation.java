@@ -70,10 +70,6 @@ public class RenameCollectionOperation implements WriteOperation<Void> {
         this(originalNamespace, newNamespace, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public RenameCollectionOperation(final MongoNamespace originalNamespace, final MongoNamespace newNamespace,
             @Nullable final WriteConcern writeConcern, final boolean retryWrites,
             @Nullable final Integer maxAdaptiveRetriesSetting) {

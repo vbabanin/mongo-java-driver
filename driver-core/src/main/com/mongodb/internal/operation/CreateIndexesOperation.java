@@ -79,10 +79,6 @@ public class CreateIndexesOperation implements WriteOperation<Void> {
         this(namespace, requests, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public CreateIndexesOperation(final MongoNamespace namespace, final List<IndexRequest> requests,
             @Nullable final WriteConcern writeConcern, final boolean retryWrites,
             @Nullable final Integer maxAdaptiveRetriesSetting) {

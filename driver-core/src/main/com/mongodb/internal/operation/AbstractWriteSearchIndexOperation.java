@@ -55,10 +55,6 @@ abstract class AbstractWriteSearchIndexOperation implements WriteOperation<Void>
         this(namespace, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     AbstractWriteSearchIndexOperation(final MongoNamespace namespace, final boolean retryWrites,
             @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.namespace = namespace;

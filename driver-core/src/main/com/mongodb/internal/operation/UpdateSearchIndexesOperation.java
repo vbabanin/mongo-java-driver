@@ -34,10 +34,6 @@ final class UpdateSearchIndexesOperation extends AbstractWriteSearchIndexOperati
         this(namespace, request, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     UpdateSearchIndexesOperation(final MongoNamespace namespace, final SearchIndexRequest request,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         super(namespace, retryWrites, maxAdaptiveRetriesSetting);

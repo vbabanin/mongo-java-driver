@@ -63,10 +63,6 @@ public class DropDatabaseOperation implements WriteOperation<Void> {
         this(databaseName, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public DropDatabaseOperation(final String databaseName, @Nullable final WriteConcern writeConcern,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.databaseName = notNull("databaseName", databaseName);

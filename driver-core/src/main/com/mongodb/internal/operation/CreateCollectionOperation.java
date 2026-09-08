@@ -103,10 +103,6 @@ public class CreateCollectionOperation implements WriteOperation<Void> {
         this(databaseName, collectionName, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public CreateCollectionOperation(final String databaseName, final String collectionName, @Nullable final WriteConcern writeConcern,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.databaseName = notNull("databaseName", databaseName);

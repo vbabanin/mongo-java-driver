@@ -70,10 +70,6 @@ public class CreateViewOperation implements WriteOperation<Void> {
         this(databaseName, viewName, viewOn, pipeline, writeConcern, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public CreateViewOperation(final String databaseName, final String viewName, final String viewOn, final List<BsonDocument> pipeline,
             final WriteConcern writeConcern, final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         this.databaseName = notNull("databaseName", databaseName);

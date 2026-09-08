@@ -36,10 +36,6 @@ final class DropSearchIndexOperation extends AbstractWriteSearchIndexOperation {
         this(namespace, indexName, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     DropSearchIndexOperation(final MongoNamespace namespace, final String indexName,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
         super(namespace, retryWrites, maxAdaptiveRetriesSetting);

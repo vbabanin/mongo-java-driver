@@ -85,10 +85,6 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
         this(namespace, pipeline, readConcern, writeConcern, aggregationLevel, false, null);
     }
 
-    /**
-     * @param retryWrites Whether overload retries are enabled for this operation.
-     * @param maxAdaptiveRetriesSetting The maximum number of overload retries, or {@code null} to use the default.
-     */
     public AggregateToCollectionOperation(final MongoNamespace namespace, final List<BsonDocument> pipeline,
             @Nullable final ReadConcern readConcern, @Nullable final WriteConcern writeConcern, final AggregationLevel aggregationLevel,
             final boolean retryWrites, @Nullable final Integer maxAdaptiveRetriesSetting) {
