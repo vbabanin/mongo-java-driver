@@ -22,7 +22,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.internal.async.SingleResultCallback;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.RetryControl;
-import com.mongodb.internal.binding.AsyncConnectionSource;
 import com.mongodb.internal.binding.AsyncReadWriteBinding;
 import com.mongodb.internal.binding.AsyncWriteBinding;
 import com.mongodb.internal.binding.ReadWriteBinding;
@@ -43,8 +42,8 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.async.ErrorHandlingResultCallback.errorHandlingCallback;
 import static com.mongodb.internal.operation.AsyncOperationHelper.decorateWithRetriesAsync;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommandAsync;
+import static com.mongodb.internal.operation.AsyncOperationHelper.releasingCallback;
 import static com.mongodb.internal.operation.AsyncOperationHelper.withAsyncConnection;
-import static com.mongodb.internal.operation.AsyncOperationHelper.withAsyncWriteConnectionSource;
 import static com.mongodb.internal.operation.AsyncOperationHelper.writeConcernErrorTransformerAsync;
 import static com.mongodb.internal.operation.CommandOperationHelper.createSpecRetryControl;
 import static com.mongodb.internal.operation.CommandOperationHelper.isNamespaceError;
@@ -53,7 +52,6 @@ import static com.mongodb.internal.operation.OperationHelper.LOGGER;
 import static com.mongodb.internal.operation.SyncOperationHelper.decorateWithRetries;
 import static com.mongodb.internal.operation.SyncOperationHelper.executeCommand;
 import static com.mongodb.internal.operation.SyncOperationHelper.withConnection;
-import static com.mongodb.internal.operation.SyncOperationHelper.withWriteConnectionSource;
 import static com.mongodb.internal.operation.SyncOperationHelper.writeConcernErrorTransformer;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
 import static java.util.Arrays.asList;
@@ -119,13 +117,7 @@ public class DropCollectionOperation implements WriteOperation<Void> {
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         BsonDocument localEncryptedFields = getEncryptedFields((ReadWriteBinding) binding, operationContext);
-        List<Supplier<BsonDocument>> commandFunctions = getCommands(localEncryptedFields);
-        // A single (non-Queryable-Encryption) drop re-selects a write source per retry attempt, so overload retries
-        // retarget away from a failed or stepped-down server. The Queryable-Encryption sequence pins one source so the
-        // sub-commands run against a single server; if that server steps down the sequence fails loudly rather than
-        // silently leaving a state collection on a new primary that never replicated its drop.
-        if (commandFunctions.size() == 1) {
-            Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
+        getCommands(localEncryptedFields).forEach(commandCreator -> {
             RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
             Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
                 retryControl.getPolicy().onCommand(this::getCommandName);
@@ -139,27 +131,9 @@ public class DropCollectionOperation implements WriteOperation<Void> {
                     return null;
                 });
             });
-            return retryingCommandExecutor.get();
-        }
-        return withWriteConnectionSource(binding, operationContext, (source, operationContextWithMinRtt) -> {
-            commandFunctions.forEach(commandCreator -> {
-                RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContextWithMinRtt);
-                Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContextWithMinRtt, () -> {
-                    retryControl.getPolicy().onCommand(this::getCommandName);
-                    return withConnection(source, operationContextWithMinRtt, (connection, connectionScopedOperationContext) -> {
-                        try {
-                            executeCommand(binding, connectionScopedOperationContext, namespace.getDatabaseName(), commandCreator.get(),
-                                    connection, writeConcernErrorTransformer(connectionScopedOperationContext.getTimeoutContext()));
-                        } catch (MongoCommandException e) {
-                            rethrowIfNotNamespaceError(e);
-                        }
-                        return null;
-                    });
-                });
-                retryingCommandExecutor.get();
-            });
-            return null;
+            retryingCommandExecutor.get();
         });
+        return null;
     }
 
     @Override
@@ -170,31 +144,7 @@ public class DropCollectionOperation implements WriteOperation<Void> {
                 errorHandlingCallback(callback, LOGGER).onResult(null, t);
                 return;
             }
-            List<Supplier<BsonDocument>> commandFunctions = getCommands(localEncryptedFields);
-            if (commandFunctions.size() == 1) {
-                Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
-                RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
-                AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext,
-                        supplierCallback -> {
-                            retryControl.getPolicy().onCommand(this::getCommandName);
-                            executeCommandAsync(binding, operationContext, namespace.getDatabaseName(),
-                                    (operationContext1, serverDescription, connectionDescription) -> commandCreator.get(),
-                                    writeConcernErrorTransformerAsync(operationContext.getTimeoutContext()),
-                                    (result, t1) -> {
-                                        if (t1 != null && isNamespaceError(t1)) {
-                                            supplierCallback.onResult(null, null);
-                                        } else {
-                                            supplierCallback.onResult(result, t1);
-                                        }
-                                    });
-                        });
-                retryingCommandExecutor.get(callback);
-            } else {
-                withAsyncWriteConnectionSource(binding, operationContext, callback,
-                        (source, operationContextWithMinRtt, sourceReleasingCallback) ->
-                                new ProcessCommandsCallback(binding, source, operationContextWithMinRtt,
-                                        commandFunctions, sourceReleasingCallback).onResult(null, null));
-            }
+            new ProcessCommandsCallback(binding, operationContext, getCommands(localEncryptedFields), callback).onResult(null, null);
         });
     }
 
@@ -301,19 +251,16 @@ public class DropCollectionOperation implements WriteOperation<Void> {
      */
     class ProcessCommandsCallback implements SingleResultCallback<Void> {
         private final AsyncWriteBinding binding;
-        private final AsyncConnectionSource source;
         private final OperationContext operationContext;
         private final SingleResultCallback<Void> finalCallback;
         private final Deque<Supplier<BsonDocument>> commands;
 
         ProcessCommandsCallback(
                 final AsyncWriteBinding binding,
-                final AsyncConnectionSource source,
                 final OperationContext operationContext,
                 final List<Supplier<BsonDocument>> commands,
                 final SingleResultCallback<Void> finalCallback) {
             this.binding = binding;
-            this.source = source;
             this.operationContext = operationContext;
             this.finalCallback = finalCallback;
             this.commands = new ArrayDeque<>(commands);
@@ -333,12 +280,17 @@ public class DropCollectionOperation implements WriteOperation<Void> {
                 AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext,
                         supplierCallback -> {
                             retryControl.getPolicy().onCommand(DropCollectionOperation.this::getCommandName);
-                            withAsyncConnection(source, operationContext, supplierCallback,
-                                    (connection, connectionScopedOperationContext, connectionReleasingCallback) ->
-                                            executeCommandAsync(binding, connectionScopedOperationContext, namespace.getDatabaseName(),
-                                                    nextCommandFunction.get(), connection,
-                                                    writeConcernErrorTransformerAsync(connectionScopedOperationContext.getTimeoutContext()),
-                                                    connectionReleasingCallback));
+                            withAsyncConnection(binding, operationContext, (connection, connectionScopedOperationContext, t1) -> {
+                                if (t1 != null) {
+                                    supplierCallback.onResult(null, t1);
+                                } else {
+                                    SingleResultCallback<Void> connectionReleasingCallback = releasingCallback(supplierCallback, connection);
+                                    executeCommandAsync(binding, connectionScopedOperationContext, namespace.getDatabaseName(),
+                                            nextCommandFunction.get(), connection,
+                                            writeConcernErrorTransformerAsync(connectionScopedOperationContext.getTimeoutContext()),
+                                            connectionReleasingCallback);
+                                }
+                            });
                         });
                 retryingCommandExecutor.get(this);
             }

@@ -135,21 +135,6 @@ final class SyncOperationHelper {
     }
 
     /**
-     * Gets a {@link Connection} from the already selected {@code source} and executes the {@code callable} with it.
-     * Guarantees to {@linkplain ReferenceCounted#release() release} the connection after completion of the {@code callable},
-     * while leaving the {@code source} intact, so that the caller may check out further connections from the same server.
-     */
-    static <T> T withConnection(final ConnectionSource source,
-                                final OperationContext operationContext,
-                                final CallableWithConnection<T> callable) {
-        return withSuppliedResource(
-                source::getConnection,
-                false,
-                operationContext,
-                connection -> callable.call(connection, operationContext));
-    }
-
-    /**
      * Gets a {@link ConnectionSource} and a {@link Connection} from the {@code sourceSupplier} and executes the {@code function} with them.
      * Guarantees to {@linkplain ReferenceCounted#release() release} the source and the connection after completion of the {@code function}.
      */

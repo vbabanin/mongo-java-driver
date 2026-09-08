@@ -130,25 +130,6 @@ final class AsyncOperationHelper {
     }
 
     /**
-     * The asynchronous counterpart of {@code SyncOperationHelper.withConnection(ConnectionSource, OperationContext, CallableWithConnection)}.
-     *
-     * @see #withAsyncSuppliedResource(AsyncCallbackFunction, boolean, OperationContext, SingleResultCallback, AsyncCallbackFunction)
-     */
-    static <R> void withAsyncConnection(
-            final AsyncConnectionSource source,
-            final OperationContext operationContext,
-            final SingleResultCallback<R> callback,
-            final AsyncCallbackBiFunction<AsyncConnection, OperationContext, R> asyncFunction) {
-        withAsyncSuppliedResource(
-                source::getConnection,
-                false,
-                operationContext,
-                callback,
-                (connection, connectionReleasingCallback) ->
-                        asyncFunction.apply(connection, operationContext, connectionReleasingCallback));
-    }
-
-    /**
      * @see #withAsyncSuppliedResource(AsyncCallbackFunction, boolean, OperationContext, SingleResultCallback, AsyncCallbackFunction)
      */
     static <R> void withAsyncSourceAndConnection(
