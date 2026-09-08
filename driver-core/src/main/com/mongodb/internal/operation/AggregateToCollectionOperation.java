@@ -193,8 +193,7 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 transformer(),
-                new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY));
+                createSpecRetryPolicy());
     }
 
     @Override
@@ -209,8 +208,7 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 asyncTransformer(),
-                new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY),
+                createSpecRetryPolicy(),
                 callback);
     }
 
@@ -265,5 +263,10 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                     connection.getDescription().getMaxWireVersion(), operationContext.getTimeoutContext());
             return null;
         };
+    }
+
+    private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {
+        return new SpecRetryPolicy.IndividualPolicies(retryWrites)
+                .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY);
     }
 }

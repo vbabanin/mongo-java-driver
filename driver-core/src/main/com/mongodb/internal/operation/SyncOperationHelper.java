@@ -110,6 +110,19 @@ final class SyncOperationHelper {
         }
     }
 
+    static <T> T withWriteConnectionSource(final WriteBinding binding,
+                                           final OperationContext operationContext,
+                                           final CallableWithSource<T> callable) {
+        OperationContext serverSelectionOperationContext =
+                operationContext.withOverride(TimeoutContext::withComputedServerSelectionTimeout);
+        ConnectionSource source = binding.getWriteConnectionSource(serverSelectionOperationContext);
+        try {
+            return callable.call(source, operationContext.withMinRoundTripTime(source.getServerDescription()));
+        } finally {
+            source.release();
+        }
+    }
+
     static <T> T withConnection(final WriteBinding binding,
                                 final OperationContext operationContext,
                                 final CallableWithConnection<T> callable) {
@@ -119,6 +132,21 @@ final class SyncOperationHelper {
                 operationContext,
                 (source, connection, operationContextWithMinRtt) ->
                         callable.call(connection, operationContextWithMinRtt));
+    }
+
+    /**
+     * Gets a {@link Connection} from the already selected {@code source} and executes the {@code callable} with it.
+     * Guarantees to {@linkplain ReferenceCounted#release() release} the connection after completion of the {@code callable},
+     * while leaving the {@code source} intact, so that the caller may check out further connections from the same server.
+     */
+    static <T> T withConnection(final ConnectionSource source,
+                                final OperationContext operationContext,
+                                final CallableWithConnection<T> callable) {
+        return withSuppliedResource(
+                source::getConnection,
+                false,
+                operationContext,
+                connection -> callable.call(connection, operationContext));
     }
 
     /**

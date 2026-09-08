@@ -111,8 +111,7 @@ public class DropIndexOperation implements WriteOperation<Void> {
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
-                new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY),
+                createSpecRetryPolicy(),
                 operationContext);
         Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
             retryControl.getPolicy().onCommand(this::getCommandName);
@@ -132,8 +131,7 @@ public class DropIndexOperation implements WriteOperation<Void> {
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext,
                              final SingleResultCallback<Void> callback) {
         RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
-                new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                        .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY),
+                createSpecRetryPolicy(),
                 operationContext);
         AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext, supplierCallback -> {
             retryControl.getPolicy().onCommand(this::getCommandName);
@@ -160,5 +158,10 @@ public class DropIndexOperation implements WriteOperation<Void> {
             appendWriteConcernToCommand(writeConcern, command);
             return command;
         };
+    }
+
+    private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {
+        return new SpecRetryPolicy.IndividualPolicies(retryWrites)
+                .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY);
     }
 }

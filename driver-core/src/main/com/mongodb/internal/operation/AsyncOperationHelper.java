@@ -27,6 +27,7 @@ import com.mongodb.internal.TimeoutContext;
 import com.mongodb.internal.async.AsyncBatchCursor;
 import com.mongodb.internal.async.MutableValue;
 import com.mongodb.internal.async.SingleResultCallback;
+import com.mongodb.internal.async.function.AsyncCallbackBiFunction;
 import com.mongodb.internal.async.function.AsyncCallbackFunction;
 import com.mongodb.internal.async.function.AsyncCallbackSupplier;
 import com.mongodb.internal.async.function.AsyncCallbackTriFunction;
@@ -92,6 +93,31 @@ final class AsyncOperationHelper {
                 errorHandlingCallback(new AsyncCallableWithSourceCallback(callable), OperationHelper.LOGGER));
     }
 
+    /**
+     * The asynchronous counterpart of {@code SyncOperationHelper.withWriteConnectionSource}.
+     *
+     * @see #withAsyncSuppliedResource(AsyncCallbackFunction, boolean, OperationContext, SingleResultCallback, AsyncCallbackFunction)
+     */
+    static <R> void withAsyncWriteConnectionSource(
+            final AsyncWriteBinding binding,
+            final OperationContext operationContext,
+            final SingleResultCallback<R> callback,
+            final AsyncCallbackBiFunction<AsyncConnectionSource, OperationContext, R> asyncFunction) {
+        SingleResultCallback<R> errorHandlingCallback = errorHandlingCallback(callback, OperationHelper.LOGGER);
+
+        OperationContext serverSelectionOperationContext =
+                operationContext.withOverride(TimeoutContext::withComputedServerSelectionTimeout);
+        withAsyncSuppliedResource(
+                binding::getWriteConnectionSource,
+                false,
+                serverSelectionOperationContext,
+                errorHandlingCallback,
+                (source, sourceReleasingCallback) -> asyncFunction.apply(
+                        source,
+                        operationContext.withMinRoundTripTime(source.getServerDescription()),
+                        sourceReleasingCallback));
+    }
+
     static void withAsyncConnection(final AsyncWriteBinding binding,
                                     final OperationContext originalOperationContext,
                                     final AsyncCallableWithConnection callable) {
@@ -101,6 +127,25 @@ final class AsyncOperationHelper {
                 errorHandlingCallback(
                         new AsyncCallableWithConnectionCallback(callable, serverSelectionOperationContext, originalOperationContext),
                         OperationHelper.LOGGER));
+    }
+
+    /**
+     * The asynchronous counterpart of {@code SyncOperationHelper.withConnection(ConnectionSource, OperationContext, CallableWithConnection)}.
+     *
+     * @see #withAsyncSuppliedResource(AsyncCallbackFunction, boolean, OperationContext, SingleResultCallback, AsyncCallbackFunction)
+     */
+    static <R> void withAsyncConnection(
+            final AsyncConnectionSource source,
+            final OperationContext operationContext,
+            final SingleResultCallback<R> callback,
+            final AsyncCallbackBiFunction<AsyncConnection, OperationContext, R> asyncFunction) {
+        withAsyncSuppliedResource(
+                source::getConnection,
+                false,
+                operationContext,
+                callback,
+                (connection, connectionReleasingCallback) ->
+                        asyncFunction.apply(connection, operationContext, connectionReleasingCallback));
     }
 
     /**
