@@ -35,6 +35,7 @@ import static com.mongodb.internal.operation.AsyncOperationHelper.executeCommand
 import static com.mongodb.internal.operation.AsyncOperationHelper.withAsyncSourceAndConnection;
 import static com.mongodb.internal.operation.AsyncOperationHelper.writeConcernErrorTransformerAsync;
 import static com.mongodb.internal.operation.CommandOperationHelper.createSpecRetryControl;
+import static com.mongodb.internal.operation.SpecRetryPolicy.IndividualPolicies.overloadForWrite;
 import static com.mongodb.internal.operation.SyncOperationHelper.decorateWithRetries;
 import static com.mongodb.internal.operation.SyncOperationHelper.executeCommand;
 import static com.mongodb.internal.operation.SyncOperationHelper.withConnection;
@@ -65,7 +66,7 @@ abstract class AbstractWriteSearchIndexOperation implements WriteOperation<Void>
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
-                createSpecRetryPolicy(),
+                overloadForWrite(retryWrites, maxAdaptiveRetriesSetting),
                 operationContext);
         Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
             retryControl.getPolicy().onCommand(this::getCommandName);
@@ -86,7 +87,7 @@ abstract class AbstractWriteSearchIndexOperation implements WriteOperation<Void>
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
         RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
-                createSpecRetryPolicy(),
+                overloadForWrite(retryWrites, maxAdaptiveRetriesSetting),
                 operationContext);
         AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext, supplierCallback -> {
             retryControl.getPolicy().onCommand(this::getCommandName);
@@ -134,8 +135,4 @@ abstract class AbstractWriteSearchIndexOperation implements WriteOperation<Void>
         return namespace;
     }
 
-    private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {
-        return new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY);
-    }
 }

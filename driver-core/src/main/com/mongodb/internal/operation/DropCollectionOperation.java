@@ -49,6 +49,7 @@ import static com.mongodb.internal.operation.CommandOperationHelper.createSpecRe
 import static com.mongodb.internal.operation.CommandOperationHelper.isNamespaceError;
 import static com.mongodb.internal.operation.CommandOperationHelper.rethrowIfNotNamespaceError;
 import static com.mongodb.internal.operation.OperationHelper.LOGGER;
+import static com.mongodb.internal.operation.SpecRetryPolicy.IndividualPolicies.overloadForWrite;
 import static com.mongodb.internal.operation.SyncOperationHelper.decorateWithRetries;
 import static com.mongodb.internal.operation.SyncOperationHelper.executeCommand;
 import static com.mongodb.internal.operation.SyncOperationHelper.withConnection;
@@ -114,7 +115,8 @@ public class DropCollectionOperation implements WriteOperation<Void> {
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         BsonDocument localEncryptedFields = getEncryptedFields((ReadWriteBinding) binding, operationContext);
         getCommands(localEncryptedFields).forEach(commandCreator -> {
-            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
+                    overloadForWrite(retryWrites, maxAdaptiveRetriesSetting), operationContext);
             Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
                 retryControl.getPolicy().onCommand(this::getCommandName);
                 return withConnection(binding, operationContext, (connection, connectionScopedOperationContext) -> {
@@ -272,7 +274,8 @@ public class DropCollectionOperation implements WriteOperation<Void> {
             if (nextCommandFunction == null) {
                 finalCallback.onResult(null, null);
             } else {
-                RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+                RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
+                    overloadForWrite(retryWrites, maxAdaptiveRetriesSetting), operationContext);
                 AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext,
                         supplierCallback -> {
                             retryControl.getPolicy().onCommand(DropCollectionOperation.this::getCommandName);
@@ -294,8 +297,4 @@ public class DropCollectionOperation implements WriteOperation<Void> {
     }
 
 
-    private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {
-        return new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY);
-    }
 }

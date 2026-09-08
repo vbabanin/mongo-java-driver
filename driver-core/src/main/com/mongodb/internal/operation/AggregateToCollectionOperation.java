@@ -43,6 +43,7 @@ import static com.mongodb.assertions.Assertions.notNull;
 import static com.mongodb.internal.operation.AsyncOperationHelper.CommandReadTransformerAsync;
 import static com.mongodb.internal.operation.AsyncOperationHelper.executeRetryableReadAsync;
 import static com.mongodb.internal.operation.ServerVersionHelper.FIVE_DOT_ZERO_WIRE_VERSION;
+import static com.mongodb.internal.operation.SpecRetryPolicy.IndividualPolicies.overloadForWrite;
 import static com.mongodb.internal.operation.SyncOperationHelper.CommandReadTransformer;
 import static com.mongodb.internal.operation.SyncOperationHelper.executeRetryableRead;
 import static com.mongodb.internal.operation.WriteConcernHelper.appendWriteConcernToCommand;
@@ -189,7 +190,7 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 transformer(),
-                createSpecRetryPolicy());
+                overloadForWrite(retryWrites, maxAdaptiveRetriesSetting));
     }
 
     @Override
@@ -204,7 +205,7 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
                 getCommandCreator(),
                 new BsonDocumentCodec(),
                 asyncTransformer(),
-                createSpecRetryPolicy(),
+                overloadForWrite(retryWrites, maxAdaptiveRetriesSetting),
                 callback);
     }
 
@@ -261,8 +262,4 @@ public class AggregateToCollectionOperation implements ReadOperationSimple<Void>
         };
     }
 
-    private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {
-        return new SpecRetryPolicy.IndividualPolicies(retryWrites)
-                .includeOverload(maxAdaptiveRetriesSetting, SpecRetryPolicy.ErrorPropagation.AS_WRITE_POLICY);
-    }
 }
