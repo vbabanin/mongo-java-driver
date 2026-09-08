@@ -20,11 +20,9 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoServerException;
-import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DropCollectionOptions;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.bulk.ClientBulkWriteResult;
@@ -63,6 +61,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 
+import static com.mongodb.ClusterFixture.isStandalone;
 import static com.mongodb.ClusterFixture.serverVersionAtLeast;
 import static com.mongodb.MongoException.RETRYABLE_ERROR_LABEL;
 import static com.mongodb.MongoException.SYSTEM_OVERLOADED_ERROR_LABEL;
@@ -76,6 +75,7 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -696,6 +696,7 @@ public class BackpressureProseTest {
             final int failPointSkip,
             final List<BsonDocument> expectedCommands) throws InterruptedException {
         assumeTrue(serverVersionAtLeast(7, 0));
+        assumeFalse(isStandalone(), "Encrypted collections are not supported on standalone");
         TestCommandListener commandListener = new TestCommandListener();
         // The failPoint only targets the failing command's name, and `skip` is the number of same-name commands
         // preceding it, so those pass through and every subsequent matching command (i.e. the retries of the one
@@ -746,6 +747,7 @@ public class BackpressureProseTest {
             final int failPointSkip,
             final List<BsonDocument> expectedCommands) throws InterruptedException {
         assumeTrue(serverVersionAtLeast(7, 0));
+        assumeFalse(isStandalone(), "Encrypted collections are not supported on standalone");
         TestCommandListener commandListener = new TestCommandListener();
         // The failPoint fails every command of the sequence, so `skip` is the number of the commands preceding the
         // failing one. It lets them pass through and then fails every subsequent one, so that all the retries of a
