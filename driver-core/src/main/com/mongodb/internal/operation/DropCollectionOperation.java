@@ -142,29 +142,30 @@ public class DropCollectionOperation implements WriteOperation<Void> {
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext,
                              final SingleResultCallback<Void> callback) {
-        RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
-                createSpecRetryPolicy(),
-                operationContext);
-        AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext, supplierCallback -> {
-            SingleResultCallback<Void> errHandlingCallback = errorHandlingCallback(supplierCallback, LOGGER);
-            getEncryptedFields((AsyncReadWriteBinding) binding, operationContext, (result, t) -> {
-                if (t != null) {
-                    errHandlingCallback.onResult(null, t);
-                } else {
-                    withAsyncConnection(binding, operationContext, (connection, operationContextWithMinRtt, t1) -> {
-                        if (t1 != null) {
-                            errHandlingCallback.onResult(null, t1);
-                        } else {
-                            new ProcessCommandsCallback(binding, operationContextWithMinRtt, connection, getCommands(result),
-                                    releasingCallback(errHandlingCallback,
-                                    connection))
-                                    .onResult(null, null);
-                        }
+        getEncryptedFields((AsyncReadWriteBinding) binding, operationContext, (localEncryptedFields, t) -> {
+            if (t != null) {
+                errorHandlingCallback(callback, LOGGER).onResult(null, t);
+                return;
+            }
+            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(
+                    createSpecRetryPolicy(),
+                    operationContext);
+            AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext,
+                    supplierCallback -> {
+                        SingleResultCallback<Void> errHandlingCallback = errorHandlingCallback(supplierCallback, LOGGER);
+                        withAsyncConnection(binding, operationContext, (connection, operationContextWithMinRtt, t1) -> {
+                            if (t1 != null) {
+                                errHandlingCallback.onResult(null, t1);
+                            } else {
+                                new ProcessCommandsCallback(binding, operationContextWithMinRtt, connection,
+                                        getCommands(localEncryptedFields),
+                                        releasingCallback(errHandlingCallback, connection))
+                                        .onResult(null, null);
+                            }
+                        });
                     });
-                }
-            });
+            retryingCommandExecutor.get(callback);
         });
-        retryingCommandExecutor.get(callback);
     }
 
     /**
