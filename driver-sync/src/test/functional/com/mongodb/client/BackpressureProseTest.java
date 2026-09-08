@@ -21,6 +21,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.MongoServerException;
 import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DropCollectionOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.SearchIndexModel;
 import com.mongodb.client.model.Updates;
@@ -706,6 +707,54 @@ public class BackpressureProseTest {
                 commandListener.reset();
                 MongoServerException e = assertThrows(MongoServerException.class, () -> database.createCollection(
                         NAMESPACE.getCollectionName(), encryptedCollectionOptions()));
+                assertEquals(462, e.getCode());
+                assertCommandsStarted(expectedCommands, commandListener);
+            }
+        }
+    }
+
+    private static Stream<Arguments> dropEncryptedCollectionRetriesEachCommandIndependently() {
+        String collectionName = NAMESPACE.getCollectionName();
+        List<BsonDocument> commandSequence = asList(
+                new BsonDocument("drop", new BsonString(ENCRYPTED_STATE_COLLECTION_PREFIX + collectionName + ".esc")),
+                new BsonDocument("drop", new BsonString(ENCRYPTED_STATE_COLLECTION_PREFIX + collectionName + ".ecoc")),
+                new BsonDocument("drop", new BsonString(collectionName)));
+        return IntStream.range(0, commandSequence.size()).mapToObj(failingCommandIndex -> {
+            BsonDocument failingCommand = commandSequence.get(failingCommandIndex);
+            List<BsonDocument> expectedCommands = new ArrayList<>(commandSequence.subList(0, failingCommandIndex));
+            expectedCommands.addAll(nCopies(DEFAULT_MAX_ADAPTIVE_RETRIES + 1, failingCommand));
+            return Arguments.of(failingCommand, failingCommandIndex, expectedCommands);
+        });
+    }
+
+    @ParameterizedTest(name = "dropEncryptedCollectionRetriesEachCommandIndependently. failingCommand={0}, failPointSkip=={1}")
+    @MethodSource
+    void dropEncryptedCollectionRetriesEachCommandIndependently(
+            final BsonDocument failingCommand,
+            final int failPointSkip,
+            final List<BsonDocument> expectedCommands) throws InterruptedException {
+        assumeTrue(serverVersionAtLeast(7, 0));
+        TestCommandListener commandListener = new TestCommandListener();
+        // The failPoint fails every command of the sequence, so `skip` is the number of the commands preceding the
+        // failing one. It lets them pass through and then fails every subsequent one, so that all the retries of a
+        // single command in the sequence are exhausted.
+        BsonDocument configureFailPoint = BsonDocument.parse(
+                "{\n"
+                        + "    configureFailPoint: 'failCommand',\n"
+                        + "    mode: {skip: " + failPointSkip + "},\n"
+                        + "    data: {\n"
+                        + "        failCommands: ['drop'],\n"
+                        + "        errorCode: 462,\n"
+                        + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
+                        + "    }\n"
+                        + "}\n");
+        try (MongoClient client = createClient(MongoClientSettings.builder(getMongoClientSettings())
+                .addCommandListener(commandListener)
+                .build())) {
+            try (FailPoint ignored = FailPoint.enable(configureFailPoint, getPrimary())) {
+                commandListener.reset();
+                MongoServerException e = assertThrows(MongoServerException.class, () -> getCollection(client).drop(
+                        new DropCollectionOptions().encryptedFields(encryptedCollectionOptions().getEncryptedFields())));
                 assertEquals(462, e.getCode());
                 assertCommandsStarted(expectedCommands, commandListener);
             }
