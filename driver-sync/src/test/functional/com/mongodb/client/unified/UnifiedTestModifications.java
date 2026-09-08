@@ -576,7 +576,7 @@ public final class UnifiedTestModifications {
 
         // backpressure
 
-        def.modify(WAIT_FOR_BATCH_CURSOR_CREATION)
+        def.modify(WAIT_FOR_BATCH_CURSOR_CREATION, IGNORE_EXTRA_EVENTS)
                 .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times",
                         "client.createChangeStream retries at most maxAttempts=2 times")
                 .test("client-backpressure", "tests that operations retry at most maxAttempts=2 times",
