@@ -676,13 +676,20 @@ public class BackpressureProseTest {
                 new BsonDocument("createIndexes", new BsonString(collectionName)));
         return IntStream.range(0, commandSequence.size()).mapToObj(failingCommandIndex -> {
             BsonDocument failingCommand = commandSequence.get(failingCommandIndex);
+            String failingCommandName = failingCommand.getFirstKey();
+            // `skip` is the number of commands preceding the failing one that share its name, since the failPoint
+            // only targets the failing command's name. This keeps the count correct regardless of whether the
+            // server tracks skip globally or per failCommand entry.
+            long failPointSkip = commandSequence.subList(0, failingCommandIndex).stream()
+                    .filter(command -> failingCommandName.equals(command.getFirstKey()))
+                    .count();
             List<BsonDocument> expectedCommands = new ArrayList<>(commandSequence.subList(0, failingCommandIndex));
             expectedCommands.addAll(nCopies(DEFAULT_MAX_ADAPTIVE_RETRIES + 1, failingCommand));
-            return Arguments.of(failingCommand, failingCommandIndex, expectedCommands);
+            return Arguments.of(failingCommand, (int) failPointSkip, expectedCommands);
         });
     }
 
-    @ParameterizedTest(name = "createEncryptedCollectionRetriesEachCommandIndependently. failingCommand={0}, failPointSkip=={0}")
+    @ParameterizedTest(name = "createEncryptedCollectionRetriesEachCommandIndependently. failingCommand={0}, failPointSkip=={1}")
     @MethodSource
     void createEncryptedCollectionRetriesEachCommandIndependently(
             final BsonDocument failingCommand,
@@ -690,15 +697,16 @@ public class BackpressureProseTest {
             final List<BsonDocument> expectedCommands) throws InterruptedException {
         assumeTrue(serverVersionAtLeast(7, 0));
         TestCommandListener commandListener = new TestCommandListener();
-        // The failPoint fails every command of the sequence, so `skip` is the number of the commands preceding the
-        // failing one. It lets them pass through and then fails every subsequent one, so that all the retries of a
-        // single command in the sequence are exhausted.
+        // The failPoint only targets the failing command's name, and `skip` is the number of same-name commands
+        // preceding it, so those pass through and every subsequent matching command (i.e. the retries of the one
+        // command under test) is failed until its retries are exhausted.
+        String failCommandName = failingCommand.getFirstKey();
         BsonDocument configureFailPoint = BsonDocument.parse(
                 "{\n"
                         + "    configureFailPoint: 'failCommand',\n"
                         + "    mode: {skip: " + failPointSkip + "},\n"
                         + "    data: {\n"
-                        + "        failCommands: ['create', 'createIndexes'],\n"
+                        + "        failCommands: ['" + failCommandName + "'],\n"
                         + "        errorCode: 462,\n"
                         + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
                         + "    }\n"
