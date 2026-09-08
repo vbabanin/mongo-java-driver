@@ -84,6 +84,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  */
 public class BackpressureProseTest {
     private static final String ENCRYPTED_STATE_COLLECTION_PREFIX = "enxcol_.";
+    private static final int SYSTEM_OVERLOAD_ERROR_CODE = 462;
+    private static final int RETRYABLE_ERROR_CODE = 11602;
     private static final MongoNamespace NAMESPACE = new MongoNamespace(getDefaultDatabaseName(), BackpressureProseTest.class.getSimpleName());
     protected MongoClient createClient(final MongoClientSettings mongoClientSettings) {
         return MongoClients.create(mongoClientSettings);
@@ -476,7 +478,7 @@ public class BackpressureProseTest {
         assertCommandExhaustsOverloadRetriesAndThrows("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                singletonList(match(new Document()))));
+                                singletonList(match(Filters.empty()))));
     }
 
     @Test
@@ -546,7 +548,7 @@ public class BackpressureProseTest {
         assertCommandNotRetriedWhenRetryWritesDisabled("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                singletonList(match(new Document()))));
+                                singletonList(match(Filters.empty()))));
     }
 
     @Test
@@ -615,7 +617,7 @@ public class BackpressureProseTest {
         assertCommandNotRetriedOnRetryableWriteError("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
                         .createView(NAMESPACE.getCollectionName() + "View", NAMESPACE.getCollectionName(),
-                                singletonList(match(new Document()))));
+                                singletonList(match(Filters.empty()))));
     }
 
     @Test
@@ -674,18 +676,13 @@ public class BackpressureProseTest {
                 new BsonDocument("create", new BsonString(ENCRYPTED_STATE_COLLECTION_PREFIX + collectionName + ".ecoc")),
                 new BsonDocument("create", new BsonString(collectionName)),
                 new BsonDocument("createIndexes", new BsonString(collectionName)));
+        // QE createCollection issues the command sequence above; we generate one variant per command in round-robin,
+        // where that command is the one expected to fail and exhaust its overload retries.
         return IntStream.range(0, commandSequence.size()).mapToObj(failingCommandIndex -> {
             BsonDocument failingCommand = commandSequence.get(failingCommandIndex);
-            String failingCommandName = failingCommand.getFirstKey();
-            // `skip` is the number of commands preceding the failing one that share its name, since the failPoint
-            // only targets the failing command's name. This keeps the count correct regardless of whether the
-            // server tracks skip globally or per failCommand entry.
-            long failPointSkip = commandSequence.subList(0, failingCommandIndex).stream()
-                    .filter(command -> failingCommandName.equals(command.getFirstKey()))
-                    .count();
             List<BsonDocument> expectedCommands = new ArrayList<>(commandSequence.subList(0, failingCommandIndex));
             expectedCommands.addAll(nCopies(DEFAULT_MAX_ADAPTIVE_RETRIES + 1, failingCommand));
-            return Arguments.of(failingCommand, (int) failPointSkip, expectedCommands);
+            return Arguments.of(failingCommand, failingCommandIndex, expectedCommands);
         });
     }
 
@@ -698,17 +695,16 @@ public class BackpressureProseTest {
         assumeTrue(serverVersionAtLeast(7, 0));
         assumeFalse(isStandalone(), "Encrypted collections are not supported on standalone");
         TestCommandListener commandListener = new TestCommandListener();
-        // The failPoint only targets the failing command's name, and `skip` is the number of same-name commands
-        // preceding it, so those pass through and every subsequent matching command (i.e. the retries of the one
-        // command under test) is failed until its retries are exhausted.
-        String failCommandName = failingCommand.getFirstKey();
+        // The failPoint fails every command of the sequence, so `skip` is the number of commands preceding the
+        // failing one. It lets them pass through and then fails every subsequent one, so that all the retries of a
+        // single command in the sequence are exhausted.
         BsonDocument configureFailPoint = BsonDocument.parse(
                 "{\n"
                         + "    configureFailPoint: 'failCommand',\n"
                         + "    mode: {skip: " + failPointSkip + "},\n"
                         + "    data: {\n"
-                        + "        failCommands: ['" + failCommandName + "'],\n"
-                        + "        errorCode: 462,\n"
+                        + "        failCommands: ['create', 'createIndexes'],\n"
+                        + "        errorCode: " + SYSTEM_OVERLOAD_ERROR_CODE + ",\n"
                         + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
                         + "    }\n"
                         + "}\n");
@@ -720,7 +716,7 @@ public class BackpressureProseTest {
                 commandListener.reset();
                 MongoServerException e = assertThrows(MongoServerException.class, () -> database.createCollection(
                         NAMESPACE.getCollectionName(), encryptedCollectionOptions()));
-                assertEquals(462, e.getCode());
+                assertEquals(SYSTEM_OVERLOAD_ERROR_CODE, e.getCode());
                 assertCommandsStarted(expectedCommands, commandListener);
             }
         }
@@ -758,7 +754,7 @@ public class BackpressureProseTest {
                         + "    mode: {skip: " + failPointSkip + "},\n"
                         + "    data: {\n"
                         + "        failCommands: ['drop'],\n"
-                        + "        errorCode: 462,\n"
+                        + "        errorCode: " + SYSTEM_OVERLOAD_ERROR_CODE + ",\n"
                         + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
                         + "    }\n"
                         + "}\n");
@@ -769,13 +765,13 @@ public class BackpressureProseTest {
                 commandListener.reset();
                 MongoServerException e = assertThrows(MongoServerException.class, () -> getCollection(client).drop(
                         new DropCollectionOptions().encryptedFields(encryptedCollectionOptions().getEncryptedFields())));
-                assertEquals(462, e.getCode());
+                assertEquals(SYSTEM_OVERLOAD_ERROR_CODE, e.getCode());
                 assertCommandsStarted(expectedCommands, commandListener);
             }
         }
     }
 
-    private void assertCommandExhaustsOverloadRetriesAndThrows(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandExhaustsOverloadRetriesAndThrows(final String failingCommandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
         assumeTrue(serverVersionAtLeast(4, 4));
         TestCommandListener commandListener = new TestCommandListener();
@@ -784,8 +780,8 @@ public class BackpressureProseTest {
                 + "    configureFailPoint: 'failCommand',\n"
                 + "    mode: 'alwaysOn',\n"
                 + "    data: {\n"
-                + "        failCommands: ['" + commandName + "'],\n"
-                + "        errorCode: 462,\n"
+                + "        failCommands: ['" + failingCommandName + "'],\n"
+                + "        errorCode: " + SYSTEM_OVERLOAD_ERROR_CODE + ",\n"
                 + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
                 + "    }\n"
                 + "}\n");
@@ -794,25 +790,28 @@ public class BackpressureProseTest {
                 .build())) {
             try (FailPoint ignored = FailPoint.enable(configureFailPoint, getPrimary())) {
                 commandListener.reset();
-                assertThrows(MongoServerException.class, () -> operation.accept(client));
+                MongoServerException exception = assertThrows(MongoServerException.class, () -> operation.accept(client));
+                assertEquals(SYSTEM_OVERLOAD_ERROR_CODE, exception.getCode());
+                assertTrue(exception.hasErrorLabel(SYSTEM_OVERLOADED_ERROR_LABEL));
+                assertTrue(exception.hasErrorLabel(RETRYABLE_ERROR_LABEL));
                 assertEquals(DEFAULT_MAX_ADAPTIVE_RETRIES + 1,
-                        commandListener.getCommandStartedEvents(commandName).size(),
+                        commandListener.getCommandStartedEvents(failingCommandName).size(),
                         "Expected initial attempt plus " + DEFAULT_MAX_ADAPTIVE_RETRIES + " overload retries");
             }
         }
     }
 
-    private void assertCommandNotRetriedOnRetryableWriteError(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandNotRetriedOnRetryableWriteError(final String failingCommandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
-        assertCommandNotRetriedOnNonOverloadError(commandName, operation, RETRYABLE_WRITE_ERROR_LABEL);
+        assertCommandNotRetriedOnNonOverloadError(failingCommandName, operation, RETRYABLE_WRITE_ERROR_LABEL);
     }
 
-    private void assertCommandNotRetriedOnRetryableReadError(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandNotRetriedOnRetryableReadError(final String failingCommandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
-        assertCommandNotRetriedOnNonOverloadError(commandName, operation, null);
+        assertCommandNotRetriedOnNonOverloadError(failingCommandName, operation, null);
     }
 
-    private void assertCommandNotRetriedOnNonOverloadError(final String commandName, final Consumer<MongoClient> operation,
+    private void assertCommandNotRetriedOnNonOverloadError(final String failingCommandName, final Consumer<MongoClient> operation,
                                                            @Nullable final String errorLabel)
             throws InterruptedException {
         assumeTrue(serverVersionAtLeast(4, 4));
@@ -822,8 +821,8 @@ public class BackpressureProseTest {
                         + "    configureFailPoint: 'failCommand',\n"
                         + "    mode: {times: 1},\n"
                         + "    data: {\n"
-                        + "        failCommands: ['" + commandName + "'],\n"
-                        + "        errorCode: 11602,\n"
+                        + "        failCommands: ['" + failingCommandName + "'],\n"
+                        + "        errorCode: " + RETRYABLE_ERROR_CODE + ",\n"
                         + "        errorLabels: [" + (errorLabel == null ? "" : "'" + errorLabel + "'") + "]\n"
                         + "    }\n"
                         + "}\n");
@@ -833,30 +832,30 @@ public class BackpressureProseTest {
             try (FailPoint ignored = FailPoint.enable(configureFailPoint, getPrimary())) {
                 commandListener.reset();
                 MongoServerException exception = assertThrows(MongoServerException.class, () -> operation.accept(client));
-                assertEquals(11602, ((MongoCommandException) exception).getErrorCode(),
+                assertEquals(RETRYABLE_ERROR_CODE, ((MongoCommandException) exception).getErrorCode(),
                         format("Expected the propagated non-overload error, got: %s", exception));
                 if (errorLabel != null) {
                     assertTrue(exception.hasErrorLabel(errorLabel),
                             format("Expected the propagated error to have the %s label, got: %s", errorLabel, exception));
                 }
-                assertEquals(1, commandListener.getCommandStartedEvents(commandName).size(),
+                assertEquals(1, commandListener.getCommandStartedEvents(failingCommandName).size(),
                         format("Expected exactly one attempt of %s, as the overload-only policy does not retry"
-                                + " non-overload errors", commandName));
+                                + " non-overload errors", failingCommandName));
             }
         }
     }
 
-    private void assertCommandNotRetriedWhenRetryWritesDisabled(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandNotRetriedWhenRetryWritesDisabled(final String failingCommandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
-        assertCommandNotOverloadRetried(commandName, operation, true, false);
+        assertCommandNotOverloadRetried(failingCommandName, operation, true, false);
     }
 
-    private void assertCommandNotRetriedWhenRetryReadsDisabled(final String commandName, final Consumer<MongoClient> operation)
+    private void assertCommandNotRetriedWhenRetryReadsDisabled(final String failingCommandName, final Consumer<MongoClient> operation)
             throws InterruptedException {
-        assertCommandNotOverloadRetried(commandName, operation, false, true);
+        assertCommandNotOverloadRetried(failingCommandName, operation, false, true);
     }
 
-    private void assertCommandNotOverloadRetried(final String commandName, final Consumer<MongoClient> operation,
+    private void assertCommandNotOverloadRetried(final String failingCommandName, final Consumer<MongoClient> operation,
                                          final boolean retryReads, final boolean retryWrites)
             throws InterruptedException {
         assumeTrue(serverVersionAtLeast(4, 4));
@@ -866,8 +865,8 @@ public class BackpressureProseTest {
                         + "    configureFailPoint: 'failCommand',\n"
                         + "    mode: 'alwaysOn',\n"
                         + "    data: {\n"
-                        + "        failCommands: ['" + commandName + "'],\n"
-                        + "        errorCode: 462,\n"
+                        + "        failCommands: ['" + failingCommandName + "'],\n"
+                        + "        errorCode: " + SYSTEM_OVERLOAD_ERROR_CODE + ",\n"
                         + "        errorLabels: ['" + SYSTEM_OVERLOADED_ERROR_LABEL + "', '" + RETRYABLE_ERROR_LABEL + "']\n"
                         + "    }\n"
                         + "}\n");
@@ -879,11 +878,13 @@ public class BackpressureProseTest {
             try (FailPoint ignored = FailPoint.enable(configureFailPoint, getPrimary())) {
                 commandListener.reset();
                 MongoServerException exception = assertThrows(MongoServerException.class, () -> operation.accept(client));
+                assertEquals(SYSTEM_OVERLOAD_ERROR_CODE, exception.getCode());
                 assertTrue(exception.hasErrorLabel(SYSTEM_OVERLOADED_ERROR_LABEL),
                         "Expected propagated overload error, got: " + exception);
-                assertEquals(1, commandListener.getCommandStartedEvents(commandName).size(),
+                assertTrue(exception.hasErrorLabel(RETRYABLE_ERROR_LABEL));
+                assertEquals(1, commandListener.getCommandStartedEvents(failingCommandName).size(),
                         format("Expected exactly one attempt of %s, as retryReads=%b, retryWrites=%b disable the"
-                                + " overload retry", commandName, retryReads, retryWrites));
+                                + " overload retry", failingCommandName, retryReads, retryWrites));
             }
         }
     }
