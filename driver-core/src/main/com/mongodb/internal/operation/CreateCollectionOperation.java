@@ -263,8 +263,20 @@ public class CreateCollectionOperation implements WriteOperation<Void> {
 
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
+        List<Supplier<BsonDocument>> commandFunctions = getCommandFunctions();
+        if (commandFunctions.size() == 1) {
+            Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
+            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+            Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
+                retryControl.getPolicy().onCommand(this::getCommandName);
+                return executeCommand(binding, operationContext, databaseName,
+                        (operationContext1, serverDescription, connectionDescription) -> commandCreator.get(),
+                        writeConcernErrorTransformer(operationContext.getTimeoutContext()));
+            });
+            return retryingCommandExecutor.get();
+        }
         return withWriteConnectionSource(binding, operationContext, (source, operationContextWithMinRtt) -> {
-            getCommandFunctions().forEach(commandCreator -> {
+            commandFunctions.forEach(commandCreator -> {
                 RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContextWithMinRtt);
                 Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContextWithMinRtt, () -> {
                     retryControl.getPolicy().onCommand(this::getCommandName);
@@ -283,10 +295,24 @@ public class CreateCollectionOperation implements WriteOperation<Void> {
 
     @Override
     public void executeAsync(final AsyncWriteBinding binding, final OperationContext operationContext, final SingleResultCallback<Void> callback) {
-        withAsyncWriteConnectionSource(binding, operationContext, callback,
-                (source, operationContextWithMinRtt, sourceReleasingCallback) ->
-                        new ProcessCommandsCallback(binding, source, operationContextWithMinRtt, sourceReleasingCallback)
-                                .onResult(null, null));
+        List<Supplier<BsonDocument>> commandFunctions = getCommandFunctions();
+        if (commandFunctions.size() == 1) {
+            Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
+            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+            AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext, supplierCallback -> {
+                retryControl.getPolicy().onCommand(this::getCommandName);
+                executeCommandAsync(binding, operationContext, databaseName,
+                        (operationContext1, serverDescription, connectionDescription) -> commandCreator.get(),
+                        writeConcernErrorTransformerAsync(operationContext.getTimeoutContext()),
+                        supplierCallback);
+            });
+            retryingCommandExecutor.get(callback);
+        } else {
+            withAsyncWriteConnectionSource(binding, operationContext, callback,
+                    (source, operationContextWithMinRtt, sourceReleasingCallback) ->
+                            new ProcessCommandsCallback(binding, source, operationContextWithMinRtt, sourceReleasingCallback)
+                                    .onResult(null, null));
+        }
     }
 
     private SpecRetryPolicy.IndividualPolicies createSpecRetryPolicy() {

@@ -119,8 +119,30 @@ public class DropCollectionOperation implements WriteOperation<Void> {
     @Override
     public Void execute(final WriteBinding binding, final OperationContext operationContext) {
         BsonDocument localEncryptedFields = getEncryptedFields((ReadWriteBinding) binding, operationContext);
+        List<Supplier<BsonDocument>> commandFunctions = getCommands(localEncryptedFields);
+        // A single (non-Queryable-Encryption) drop re-selects a write source per retry attempt, so overload retries
+        // retarget away from a failed or stepped-down server. The Queryable-Encryption sequence pins one source so the
+        // sub-commands run against a single server; if that server steps down the sequence fails loudly rather than
+        // silently leaving a state collection on a new primary that never replicated its drop.
+        if (commandFunctions.size() == 1) {
+            Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
+            RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+            Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContext, () -> {
+                retryControl.getPolicy().onCommand(this::getCommandName);
+                return withConnection(binding, operationContext, (connection, connectionScopedOperationContext) -> {
+                    try {
+                        executeCommand(binding, connectionScopedOperationContext, namespace.getDatabaseName(), commandCreator.get(),
+                                connection, writeConcernErrorTransformer(connectionScopedOperationContext.getTimeoutContext()));
+                    } catch (MongoCommandException e) {
+                        rethrowIfNotNamespaceError(e);
+                    }
+                    return null;
+                });
+            });
+            return retryingCommandExecutor.get();
+        }
         return withWriteConnectionSource(binding, operationContext, (source, operationContextWithMinRtt) -> {
-            getCommands(localEncryptedFields).forEach(commandCreator -> {
+            commandFunctions.forEach(commandCreator -> {
                 RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContextWithMinRtt);
                 Supplier<Void> retryingCommandExecutor = decorateWithRetries(retryControl, operationContextWithMinRtt, () -> {
                     retryControl.getPolicy().onCommand(this::getCommandName);
@@ -148,10 +170,31 @@ public class DropCollectionOperation implements WriteOperation<Void> {
                 errorHandlingCallback(callback, LOGGER).onResult(null, t);
                 return;
             }
-            withAsyncWriteConnectionSource(binding, operationContext, callback,
-                    (source, operationContextWithMinRtt, sourceReleasingCallback) ->
-                            new ProcessCommandsCallback(binding, source, operationContextWithMinRtt,
-                                    getCommands(localEncryptedFields), sourceReleasingCallback).onResult(null, null));
+            List<Supplier<BsonDocument>> commandFunctions = getCommands(localEncryptedFields);
+            if (commandFunctions.size() == 1) {
+                Supplier<BsonDocument> commandCreator = commandFunctions.get(0);
+                RetryControl<SpecRetryPolicy> retryControl = createSpecRetryControl(createSpecRetryPolicy(), operationContext);
+                AsyncCallbackSupplier<Void> retryingCommandExecutor = decorateWithRetriesAsync(retryControl, operationContext,
+                        supplierCallback -> {
+                            retryControl.getPolicy().onCommand(this::getCommandName);
+                            executeCommandAsync(binding, operationContext, namespace.getDatabaseName(),
+                                    (operationContext1, serverDescription, connectionDescription) -> commandCreator.get(),
+                                    writeConcernErrorTransformerAsync(operationContext.getTimeoutContext()),
+                                    (result, t1) -> {
+                                        if (t1 != null && isNamespaceError(t1)) {
+                                            supplierCallback.onResult(null, null);
+                                        } else {
+                                            supplierCallback.onResult(result, t1);
+                                        }
+                                    });
+                        });
+                retryingCommandExecutor.get(callback);
+            } else {
+                withAsyncWriteConnectionSource(binding, operationContext, callback,
+                        (source, operationContextWithMinRtt, sourceReleasingCallback) ->
+                                new ProcessCommandsCallback(binding, source, operationContextWithMinRtt,
+                                        commandFunctions, sourceReleasingCallback).onResult(null, null));
+            }
         });
     }
 
