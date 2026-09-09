@@ -502,7 +502,6 @@ public class BackpressureProseTest {
     @Test
     void createSearchIndexesExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
         assertCommandExhaustsOverloadRetriesAndThrows("createSearchIndexes",
                 client -> getCollection(client).createSearchIndexes(
                         singletonList(new SearchIndexModel(new Document("mappings", new Document("dynamic", true))))));
@@ -511,7 +510,6 @@ public class BackpressureProseTest {
     @Test
     void updateSearchIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
         assertCommandExhaustsOverloadRetriesAndThrows("updateSearchIndex",
                 client -> getCollection(client).updateSearchIndex("default", new Document("mappings", new Document("dynamic", true))));
     }
@@ -519,7 +517,6 @@ public class BackpressureProseTest {
     @Test
     void dropSearchIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
         assertCommandExhaustsOverloadRetriesAndThrows("dropSearchIndex",
                 client -> getCollection(client).dropSearchIndex("default"));
     }
@@ -578,7 +575,7 @@ public class BackpressureProseTest {
     @Test
     void createSearchIndexesDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+
         assertCommandNotRetriedWhenRetryWritesDisabled("createSearchIndexes",
                 client -> getCollection(client).createSearchIndexes(
                         singletonList(new SearchIndexModel(new Document("mappings", new Document("dynamic", true))))));
@@ -587,7 +584,7 @@ public class BackpressureProseTest {
     @Test
     void updateSearchIndexDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+
         assertCommandNotRetriedWhenRetryWritesDisabled("updateSearchIndex",
                 client -> getCollection(client).updateSearchIndex("default", new Document("mappings", new Document("dynamic", true))));
     }
@@ -595,7 +592,7 @@ public class BackpressureProseTest {
     @Test
     void dropSearchIndexDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+
         assertCommandNotRetriedWhenRetryWritesDisabled("dropSearchIndex",
                 client -> getCollection(client).dropSearchIndex("default"));
     }
@@ -647,7 +644,7 @@ public class BackpressureProseTest {
     @Test
     void createSearchIndexesDoesNotRetryOnRetryableWriteError() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+
         assertCommandNotRetriedOnRetryableWriteError("createSearchIndexes",
                 client -> getCollection(client).createSearchIndexes(
                         singletonList(new SearchIndexModel(new Document("mappings", new Document("dynamic", true))))));
@@ -656,7 +653,7 @@ public class BackpressureProseTest {
     @Test
     void updateSearchIndexDoesNotRetryOnRetryableWriteError() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+
         assertCommandNotRetriedOnRetryableWriteError("updateSearchIndex",
                 client -> getCollection(client).updateSearchIndex("default", new Document("mappings", new Document("dynamic", true))));
     }
@@ -664,7 +661,7 @@ public class BackpressureProseTest {
     @Test
     void dropSearchIndexDoesNotRetryOnRetryableWriteError() throws InterruptedException {
         assumeTrue(serverVersionAtLeast(6, 0));
-        assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
+       // assumeTrue(hasAtlasSearchIndexHelperEnabled(), "Atlas Search Index tests are disabled");
         assertCommandNotRetriedOnRetryableWriteError("dropSearchIndex",
                 client -> getCollection(client).dropSearchIndex("default"));
     }
@@ -887,10 +884,6 @@ public class BackpressureProseTest {
                                 + " overload retry", failingCommandName, retryReads, retryWrites));
             }
         }
-    }
-
-    private static boolean hasAtlasSearchIndexHelperEnabled() {
-        return Boolean.parseBoolean(System.getProperty("org.mongodb.test.atlas.search.index.helpers"));
     }
 
     private static MongoCollection<Document> dropAndGetCollection(final String name, final MongoClient client) {
