@@ -676,7 +676,8 @@ class DBCollectionSpecification extends Specification {
 
         then:
         expect executor.getReadOperation(), isTheSameAs(new AggregateToCollectionOperation(collection.getNamespace(),
-                bsonPipeline, collection.getReadConcern(), collection.getWriteConcern(), AggregationLevel.COLLECTION, true, null).collation(collation))
+                bsonPipeline, collection.getReadConcern(), collection.getWriteConcern(),
+                AggregationLevel.COLLECTION, true, null).collation(collation))
     }
 
     def 'explainAggregate should create the correct AggregateOperation'() {
