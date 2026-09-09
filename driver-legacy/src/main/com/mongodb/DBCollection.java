@@ -32,6 +32,7 @@ import com.mongodb.internal.bulk.IndexRequest;
 import com.mongodb.internal.bulk.InsertRequest;
 import com.mongodb.internal.bulk.UpdateRequest;
 import com.mongodb.internal.bulk.WriteRequest.Type;
+import com.mongodb.internal.client.model.AggregationLevel;
 import com.mongodb.internal.connection.PowerOfTwoBufferPool;
 import com.mongodb.internal.operation.AggregateOperation;
 import com.mongodb.internal.operation.AggregateToCollectionOperation;
@@ -1250,7 +1251,8 @@ public class DBCollection {
         if (outCollection != null) {
             AggregateToCollectionOperation operation =
                     new AggregateToCollectionOperation(
-                            getNamespace(), stages, getReadConcern(), getWriteConcern())
+                            getNamespace(), stages, getReadConcern(), getWriteConcern(), AggregationLevel.COLLECTION,
+                            retryWrites, maxAdaptiveRetriesSetting)
                             .allowDiskUse(options.getAllowDiskUse())
                             .bypassDocumentValidation(options.getBypassDocumentValidation())
                             .collation(options.getCollation());
