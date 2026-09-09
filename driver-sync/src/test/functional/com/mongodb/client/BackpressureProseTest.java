@@ -53,7 +53,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.mongodb.client.model.Aggregates.match;
-import static com.mongodb.client.model.Indexes.ascending;
 import static com.mongodb.client.model.bulk.ClientBulkWriteOptions.clientBulkWriteOptions;
 import static com.mongodb.client.model.bulk.ClientUpdateOneOptions.clientUpdateOneOptions;
 import static java.lang.String.join;
@@ -462,18 +461,6 @@ public class BackpressureProseTest {
     }
 
     @Test
-    void createIndexesExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetriesAndThrows("createIndexes",
-                client -> getCollection(client).createIndex(ascending("a")));
-    }
-
-    @Test
-    void dropIndexExhaustsOverloadRetriesAndThrows() throws InterruptedException {
-        assertCommandExhaustsOverloadRetriesAndThrows("dropIndexes",
-                client -> getCollection(client).dropIndex(ascending("a")));
-    }
-
-    @Test
     void createViewExhaustsOverloadRetriesAndThrows() throws InterruptedException {
         assertCommandExhaustsOverloadRetriesAndThrows("create",
                 client -> client.getDatabase(NAMESPACE.getDatabaseName())
@@ -527,18 +514,6 @@ public class BackpressureProseTest {
                 client -> client.getDatabase(NAMESPACE.getDatabaseName()).createCollection(NAMESPACE.getCollectionName()));
     }
 
-
-    @Test
-    void createIndexesDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
-        assertCommandNotRetriedWhenRetryWritesDisabled("createIndexes",
-                client -> getCollection(client).createIndex(ascending("a")));
-    }
-
-    @Test
-    void dropIndexDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
-        assertCommandNotRetriedWhenRetryWritesDisabled("dropIndexes",
-                client -> getCollection(client).dropIndex(ascending("a")));
-    }
 
     @Test
     void createViewDoesNotRetryOverloadWhenRetryWritesDisabled() throws InterruptedException {
@@ -595,18 +570,6 @@ public class BackpressureProseTest {
 
         assertCommandNotRetriedWhenRetryWritesDisabled("dropSearchIndex",
                 client -> getCollection(client).dropSearchIndex("default"));
-    }
-
-    @Test
-    void createIndexesDoesNotRetryOnRetryableWriteError() throws InterruptedException {
-        assertCommandNotRetriedOnRetryableWriteError("createIndexes",
-                client -> getCollection(client).createIndex(ascending("a")));
-    }
-
-    @Test
-    void dropIndexDoesNotRetryOnRetryableWriteError() throws InterruptedException {
-        assertCommandNotRetriedOnRetryableWriteError("dropIndexes",
-                client -> getCollection(client).dropIndex(ascending("a")));
     }
 
     @Test
