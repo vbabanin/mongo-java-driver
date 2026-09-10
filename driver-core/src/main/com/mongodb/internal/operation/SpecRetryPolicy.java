@@ -70,6 +70,7 @@ import static java.util.Arrays.asList;
  */
 final class SpecRetryPolicy implements RetryPolicy {
     private static final int INFINITE_ATTEMPTS = Integer.MAX_VALUE;
+    private static final String BASE_BACKOFF_MS_FIELD = "baseBackoffMS";
 
     private final IndividualPolicies policies;
     private int maxAttempts;
@@ -300,10 +301,10 @@ final class SpecRetryPolicy implements RetryPolicy {
             return null;
         }
         BsonDocument response = ((MongoCommandException) attemptFailedResult).getResponse();
-        if (!response.containsKey("baseBackoffMS")) {
+        if (!response.containsKey(BASE_BACKOFF_MS_FIELD)) {
             return null;
         }
-        BsonValue value = response.get("baseBackoffMS");
+        BsonValue value = response.get(BASE_BACKOFF_MS_FIELD);
         if (!value.isNumber()) {
             return null;
         }
